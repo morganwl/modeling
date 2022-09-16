@@ -1,0 +1,36 @@
+\usepackage{amsmath}
+
+\usepackage{listings}
+
+\newcommand*{\course}[1]{\gdef\@course{#1}%
+}
+\renewcommand{\maketitle}{%
+    \noindent\@author \\
+    \@course \\
+    \@date \\
+    \@title
+    \vspace{1em}
+}
+
+\course{Computer Modeling and Simulation}
+\author{Anthony, Brian, Morgan}
+
+\usepackage[margin=1in]{geometry}
+\linespread{1.3}
+
+\newcommand{\question}[1]{%
+  \setcounter{enumi}{#1}%
+  \addtocounter{enumi}{-1}%
+\item}
+
+\lstnewenvironment{python}
+{%
+    % \mbox{}
+    % \vspace*{\baselineskip}
+    \lstset{
+        xleftmargin=.5\leftmargin,
+        linewidth=\linewidth,
+        language=python
+    }%
+}
+{}
