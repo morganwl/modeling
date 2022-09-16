@@ -1,0 +1,27 @@
+\question{3}
+We observe that the events ${A_1,...,A_13}$ are not conditionally
+independent, by considering the case where a $2$ has been dealt first,
+meaning that $P{A_2|D_1=2}=0$. Likewise, we can observe that
+$P(A_13|A_1,...,A_12)=1$. Because the events are not conditionally
+independent, this is not a true binomial distribution; because the
+outcome of each event is determined by the way the deck has been
+shuffled, we can consider this an \emph{ordering problem.}
+
+Because I am unsure of how to model this distribution, I chose to
+simulate 100,000,000 deals and estimate the probability
+distribution through observation.
+
+\begin{python}
+def simulate_matches():
+  deck = list(range(13)) # create an ordered deck of 13 cards
+  shuffle(deck)
+  return sum([i == card for i, card in enumerate(deck)])
+
+count = [0]*14
+samples = int(1e8)
+for i in range(samples):
+  count[simulate_matches() += 1]
+expect = sum([i*c for i,c in enumerate(count)])/samples
+\end{python}
+
+This procedure estimates $E[N] = 1.000$.

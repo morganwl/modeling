@@ -1,59 +1,40 @@
-# from collections import Counter
-from math import comb, exp, log, factorial
+"""Calculates the expected number of cards where ordinal value of the
+card matches their position in a 13-card deck. Also prints the observed
+distribution and compares it to a binomial distribution.""" 
+
+from math import factorial
 from random import shuffle
 
 def simulate_matches():
-    n = 0
     deck = list(range(13))
     shuffle(deck)
-    for i, card in enumerate(deck):
-        if card == i:
-            n += 1
-    return n
+    return sum([i == card for i, card in enumerate(deck)])
 
-i = 1
-alpha = .1
-epsilon = 0.001
-shrink = True
-while True:
-    delta = log(i**13) + i
-    if abs(delta) < epsilon:
-        break
-    if delta > 0:
-        if shrink is False:
-            alpha /= 10
-        shrink = True
-        i -= alpha
-    else:
-        if shrink is True:
-            alpha /= 10
-        shrink = False
-        i += alpha
-print(i)
-lam = i
+def binomial_mass(n, k, p):
+    return (factorial(n) / factorial(n-k) / factorial(k)) * p ** k * (1 - p) ** (n - k)
 
 count = [0]*14
-samples = 1000000
+samples = int(1e6)
+print(f'1/{samples}', end='\r')
 for i in range(samples):
+    if i % 100 == 0:
+        print(f'{i}/{samples}', end='\r')
     count[simulate_matches()] += 1
+print()
 
 distrib = 0
 expect = 0
+bin_distrib = 0
+print(f'{"N":>3}{"Raw freq":>12}{"Normal":>12}'
+      f'{"Dist":>12}{"Bin dist":>12}')
+print(f'  {"="}  {"="*10}  {"="*10}  {"="*10}  {"="*10}')
 for i, c in enumerate(count):
     prob = c/samples
     distrib += prob
     expect += prob * i
-    print(f'{i:02} {c:08} {prob:0.3} {distrib:0.3}')
-print(expect)
-
-expect_p = 0
-expect_b = 0
-for i in range(14):
-    prob_p = exp(-lam) * lam ** i / factorial(i)
-    prob_b = comb(13, i) * (1/13)**i * (1 - 1/13)**(13 - i)
-    expect_p += prob_p * i
-    expect_b += prob_b * i
-    print(f'{i:02} {prob_p:0.3} {prob_b:0.3}')
-
-print(expect_p)
-print(expect_b)
+    bin_prob = binomial_mass(13, i, 1/13)
+    bin_distrib += bin_prob
+    print(f'{i:3}{c:12}{prob: 12.3}{distrib: 12.3}{bin_distrib: 12.3}')
+print(f'Expected value: {expect}')
+print('Alternative expected value:',
+      sum([i*c for i,c in enumerate(count)])/samples)
