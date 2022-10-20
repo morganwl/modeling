@@ -1,34 +1,40 @@
-\question{2}
+\begin{solution}
 
-There are two possible events at any given service period: a customer could
-arrive, and a customer currently being served could finish. We'll call
-these, respectively, $\xi_0 and \xi_1$. Let $Y$ be a random variable
-measuring the total number of customers either waiting or currently
-being serviced. When $Y=0$, only $\xi_0$ is possible, meaning that:
+    \textbf{TODO: Clean this answer up extensively.}
 
-\begin{align*}
+    There are two possible events at any given service period: a
+    customer could arrive, and a customer currently being served could
+    finish. We'll call these, respectively, $\xi_0$ and $\xi_1$. Let $Y$
+    be a random variable measuring the total number of customers either
+    waiting or currently being serviced. When $Y=0$, only $\xi_0$ is
+    possible, meaning that:
+
+    \begin{align*}
     &P\lbrace Y = 1 \mid Y = 0\rbrace = P\lbrace\xi_0\rbrace \\
     &P\lbrace Y = 0 \mid Y = 0\rbrace = 1 - P\lbrace\xi_0\rbrace
-\end{align*}
+    \end{align*}
 
-When $Y > 0$, the number of customers present can either grow by one
-($\xi_0$), stay the same (no event or $\xi_0$ and $\xi_1$), or shrink by
-one ($\xi_1$).
+    When $Y > 0$, the number of customers present can either grow by one
+    ($\xi_0$), stay the same (no event or $\xi_0$ and $\xi_1$), or
+    shrink by one ($\xi_1$).
 
-If \textbf{P} is a transition probability matrix specifying the
-probability that the number of customers will change from $i$ customers
-to $j$ customers in a single service period, it can be defined:
+    If \textbf{P} is a transition probability matrix specifying the
+    probability that the number of customers will change from $i$
+    customers to $j$ customers in a single service period, it can be
+    defined:
 
-\begin{align*}
-    \textbf{P}_{ij} = 
-    \begin{cases}
-        1 - \beta & i = j = 0 \\
-        \beta & i = 0, j = 1 \\
-        (1 - \alpha)\beta & j = i+1, i > 0\\
-        (1 - \alpha)(1-\beta) + \alpha\beta & j=i>0\\
-        (1 - \beta)\alpha & j = i - 1\\
-        0 & \text{all other values of }i, j
-    \end{cases}
-\end{align*}
+    \begin{align*}
+        \textbf{P}_{ij} = 
+        \begin{cases}
+            1 - \beta & i = j = 0 \\
+            \beta & i = 0, j = 1 \\
+            (1 - \alpha)\beta & j = i+1, i > 0\\
+            (1 - \alpha)(1-\beta) + \alpha\beta & j=i>0\\
+            (1 - \beta)\alpha & j = i - 1\\
+            0 & \text{all other values of }i, j
+        \end{cases}
+    \end{align*}
 
-Where $i,j$ are non-negative integers.
+    Where $i,j$ are non-negative integers.
+
+\end{solution}

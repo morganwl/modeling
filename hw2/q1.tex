@@ -1,0 +1,20 @@
+\begin{solution}
+
+    Assume that there exists some states $i,j$ where $j$ is accessible
+    from $i$ and the minimum number of steps to reach $j$ from $i$ is
+    $N$, where $N > |S|$.
+
+    By the Markov property, this means that there exists some $X_0,
+    X_1,...,X_T$ of length $N$ such that $X_0 = i, X_T=j$ and $\Prob(X_n
+    \mid X{n-1}) > 0$ and $\Prob(X_n \mid X_m) = 0$ for all $m < n - 1$,
+    because, if there exists a path from $X_m$ to $X_n$, then $X_T$ can
+    be reached without passing through $X_{m+1},\ldots,X_{n-1}$,
+    resulting in a sequence of length $<N$.
+
+    However, if $N > |S|$, there must exist some distinct $X_n,X_m$ such
+    that $X_n=X_m$, meaning that $\Prob(X_n \mid X_{m-1}) > 0$ and $m -
+    1 < n -1$, which contradicts the Markov property.
+
+    \raggedleft $\square$
+
+\end{solution}
