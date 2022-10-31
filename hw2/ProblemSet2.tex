@@ -3,6 +3,7 @@
 \usepackage{amsfonts, amsmath, fancyhdr,lastpage,multirow}
 \usepackage{amsthm}
 \usepackage{graphicx}
+\usepackage{listings}
 \pagestyle{fancy}
 
 \usepackage[noend]{algpseudocode}
@@ -101,6 +102,18 @@
 \def\ep{{\epsilon}}
 \newcommand\pfrac[2]{{\left(\frac{#1}{#2}\right)}}
 
+\lstnewenvironment{python}
+{%
+    % \mbox{}
+    % \vspace*{\baselineskip}
+    \lstset{
+        xleftmargin=.5\leftmargin,
+        linewidth=\linewidth,
+        language=python
+    }%
+}
+{}
+
 \author{Morgan Wajda-Levie}
 \date{October 20, 2022}
 
@@ -153,26 +166,9 @@ Clarify how many replications of the interval $[0,T)$ you choose to use and how 
 \end{enumerate}
 \end{problem}
 
+\input{q3}
 
-\begin{problem}\points{20}
-Consider the model of a M/GI/1 queue with Poisson arrivals of rate $\la$ (inter-arrival times are a sequence of iid exponential random variables with mean $1/\la$). Suppose that the service times $\{S_i\}$ are iid with general distribution. Call $Q(t)$ the {\em queue length} process at time $t$. It is well known that if $\rho\eqdef \la \Esp(S_1)<1$ then the stationary average queue length is:
-\[
-\theta =  \lim_{t\to\infty} \frac{1}{t} \int_0^t Q(s)\, ds = \frac{\la^2\,\Esp(S_1^2)}{2(1-\rho)}.
-\]
-\begin{enumerate}
-\item Describe the discrete event model for the simulation: what are the variables in the physical state and what are the residual clocks? 
-\item Write a code to estimate $\theta$ by simulating the queue length using the discrete event simulation model. Set $\la = 1$ and use the $\Gamma(3,0.25)$ distribution for the service times. Notice that this is an example of a  long term (stationary) average estimation. Explain how you determine the length of the simulation. 
-
-\end{enumerate}
-\end{problem}
-
-\begin{problem} \points{20}
-Consider again the queueing process of the previous problem. This time use the {\em sojourn time} process $\{X_n\}$, which for each customer $n$ provides the sum of wait plus service time: $X_n = W_n + S_n$. It is well known that fr the M/GI/1 model the sojourn time converges in distribution to a random  variable $X$ is, that is: $X_n \todist X$ as $n\to\infty$.  
-Using Little's Law for the M/GI/1 queue of the previous problem, the stationary average {\em sojourn } time (waiting plus service) $X$ satisfies $\theta +\rho = \la X$, where $\th$ is the stationary queue length as in the previous problem. 
-\begin{enumerate}
-\item Describe the Petri Net model for simulation using Lindley's equation: what is the state of the system? What is the natural filtration that makes the model a Markov process (with continuous state space)?
-\item Repeat (b) as in the previous problem, now using this simulation model instead (notice that the goal is to estimate $\th$ indirectly via the estimation of $X$).  
-\end{enumerate}
-\end{problem}
+That's time! I'd love to have the time to work further, but I have to
+honor the cut-off.
 
 \end{document}

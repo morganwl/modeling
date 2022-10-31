@@ -1,0 +1,60 @@
+\documentclass{article}
+\usepackage{../modeling}
+
+\title{Chapter 2: Introduction to Simulation and Generation of Random
+Variables}
+
+\begin{document}
+
+\begin{enumerate}
+
+    \question{1} Think about a transportation problem. Describe the
+    problem for simulation. Describe the target process. Include the
+    questions to be addressed.
+
+    I would like to determine the impact of fare collection on bus
+    performance.
+
+    The target process is that of the passengers in the system (waiting
+    for a bus or riding a bus) and the position of each bus on their
+    route. At any time, passengers can arrive to wait for a bus. Buses
+    can either load and unload passengers (when they have arrived at a
+    stop), or move through their route.
+
+    Random variables are number of passengers waiting at a stop, number
+    of passengers exiting at each stop, loading and unloading time of
+    passengers (with and without fare collection), and travel time
+    between stops.
+
+    Questions are how much the expected travel time for passengers
+    changes when removing fare collection from the system. Does the
+    elimination of fare collection allow the same quality of service
+    while running fewer buses?
+
+    \question{2} 
+
+    Assuming a discrete time process, $\Omega$ could be composed of the
+    passenger arrival event, the passenger stop event, the loading
+    progress event and the bus travel progress event.
+
+    \question{3}
+
+    \begin{enumerate}
+        \item $P\{x\in\{1,2,3\} \mid x < 4\} = \frac{1}{3}$. Because we
+            only consider instances of $x < 4$, the total probability of
+            this event (which happens to be $\frac{1}{2}$), is
+            insignificant, so long as it is non-zero.
+        \item $P\{x\in\{1,2\} = P\{x = 1\} + P\{x = 2\}$, because these
+                are disjoint events. As such, the probability of an
+                outcome that is one of two numbers is $\frac{1}{3}$.
+        \item The former method has the potential for requiring multiple
+            rolls to achieve sample, but requires very little meaningful
+            computation to interpret the results, which could be
+            meaningful for a human. The latter method allows one sample
+            to be made with one roll, but requires some computation to
+            interpet the results.
+    \end{enumerate}
+
+\end{enumerate}
+
+\end{document}

@@ -1,0 +1,113 @@
+\begin{solution}
+
+    \begin{enumerate}
+        \item The DES model defines 4 events, one for bike arrivals, and
+            one for each class of rider arrivals. Events are defined
+            with an arrival rate and an effect on the current process
+            state when an event of that type is triggered.
+
+            A priority queue is initialized with one event of each type,
+            sorted by arrival time, where arrival times are sampled
+            randomly according to a poisson process with the respective
+            rates for each type of event.
+
+            A loop pops the soonest event off this queue, exiting if
+            that event occurs after the end of the simulation interval.
+            Otherwise, the event is triggered, updating the state
+            accordingly, and then a new event of the same type is
+            created, with a random arrival time, and added to the event
+            queue.
+
+            Once the first event after the simulation interval has been
+            reached (but before it has been triggered), the profit is
+            calculated.
+
+            I performed this simulation 5000 times, because that seemed
+            to converge into a fairly consistent result, and observed a
+            mean profit of 55 units.
+
+            \begin{python}
+class Event:
+    """An event, initialized with a random arrival time,
+    according to a poisson process and specified rate,
+    and offset from the current time."""
+    rate = 0
+    def __init__(self, time):
+        self.time = time + poisson(self.rate)
+
+    def trigger(self, state):
+        """Triggers the event and modifies the current state
+        accordingly."""
+        # defined for each subclass
+
+    def get_next(self):
+        """Create a new event of the same type,
+        occuring some time in the future based on
+        that event's inter-arrival time distribution."""
+        return type(self)(self.time)
+            \end{python}
+
+            \begin{python}
+def simulate(interval=T, verbose=False):
+    """Perform one simulation and return the final profit."""
+    t = 0
+    state = {'num_bikes': INITIAL_BIKES, 'revenue': 0, 'cost': 0}
+
+    future_events = PriorityQueue()
+    for et in event_types:
+        future_events.put(et(t))
+
+    while True:
+        event = future_events.get()
+        if event.time > interval:
+            break
+        t = event.time
+        event.trigger(state)
+        if verbose:
+            print_event(t, event, state)
+        future_events.put(event.get_next())
+    return profit(interval, state)
+            \end{python}
+
+        \item
+
+            \textbf{scratch most of the below, I think we are better off
+                modeling M as a binomial variable, because the value of
+            $e^{-\lambda\tau} < \epsilon$ when $\tau=120$.}
+
+            Because the four potential events are all independent and
+            disjoint, the probability of any one event is equal to the
+            sum of the probabilities of each type of event. (Some might
+            call this the addition rule of probability.) The resulting
+            process is a poisson process with $\lambda = \sum_{i=0}^4
+            \lambda_i$.
+
+            Because the PMF of a Poisson is not invertible, we cannot
+            sample M by applying the inverse function to a uniform
+            random variable, as we did for generating random arrival
+            times. A simple, though maybe not the most efficient,
+            approach is to generate a table of the CDF, $F(.)$ and
+            select the value M for which some $x \sim U \in [F(M),
+            F(M+1))$.
+
+            I'm not sure exactly how I would calculate the times $A_i$,
+            such that $A_M$ is guaranteed to be within the given
+            interval. That is, I could sample the inter-arrival times of
+            the poisson distribution, just as I did in the previous
+            version, but those random inter-arrival times could result
+            in sum that is greater than T. That said, I'm not sure that
+            I need to know the times $A_i$ for the sake of this
+            simulation, because the number of bikes present at the
+            station is not dependent on inter-arrival times.
+
+            I can identify my events by noting that
+            \[
+                \Prob(\xi_1 \mid \{\xi_1,...,\xi_4\}) = \frac{\Prob(\xi_1)}
+                {\Prob(\xi_1,...,\xi_4)}
+            \]
+            and create a CDF similarly to how I did for the value of M.
+
+        \item \textbf{TO-DO: And this}
+    \end{enumerate}
+
+\end{solution}
