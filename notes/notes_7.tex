@@ -1,0 +1,271 @@
+\documentclass{article}
+
+\usepackage{/home/morgan/code/hunter}
+\usepackage{/home/morgan/code/classnotes}
+
+\DeclareMathOperator{\Var}{Var}
+
+\title{Chapter 7: Simulation Efficiency and Variance Reduction}
+\course{Modeling and Simulation}
+\author{Morgan Wajda-Levie}
+
+\begin{document}
+
+\maketitle
+
+\setcounter{section}{8}
+\section{Ross Simulation: Statistical Validation Techniques}
+
+\begin{itemize}
+    \item statistical procedures for validating simulation models
+    \item 9.1 --- suppose assumed distribution is wholly specified
+    \item 9.2 --- suppose that only specific parameters are specified
+    \item 9.3 --- show how to test hypothesis that two samples come from
+        same population (useful for testing validity of simulation model)
+    \item 9.4 --- use real data to test hypothesis that process
+        constitutes nonhomogeneous Poisson process
+\end{itemize}
+
+\subsection{Goodness of Fit Tests}
+
+\begin{itemize}
+    \item begin analysis with hypothesis that certain random elements
+        have particular prob. distribution
+    \item e.g. suppose daily number of accidents has Poisson dist.
+    \item test by comparing observed data to probability dist.
+    \item \textbf{goodness of fit test}
+    \item method: partition possible values into finite number of
+        regions. compare distribution of observed samples with
+        theoretical distribution
+\end{itemize}
+
+\subsubsection*{Chi-Square Goodness of Fit Test for Discrete Data}
+
+Given $n$ random variables $Y_i$ with discrete values in $[1, k]$,
+hypothesis that $p_i$ is pmf of these variables. Test \emph{null
+hypothesis}: \[H_0 : P{Y = i} = p_i, i = 1,\ldots,k\]
+
+\followup{Leaving this for now, because it makes no sense.}
+
+
+\section{RS 10}
+
+\section*{Handwritten notes}
+
+\section*{Lecture}
+
+\subsection{Simulation efficiency}
+
+CI $\hat\theta_n$ of param $\theta$
+
+$\theta = E[\phi(X_t_; t \le T)]$
+
+CLT useful to provide CI
+
+\subsection{Precision vs Speed}
+
+$X_t$ on $(\omega, \mathfrak F, \mathbb P)$
+
+$\hat\theta_n \pm Z_{1 - \alpha/2} \frac{\tau}{\sqrt{n}}$
+
+$C(n) = \text{cost}(CPU)$ of $n$ replication $\hat\theta_n$
+
+$L(X)$: loss function
+
+$L:\mathbb R \to \mathbb R ^ +$ is convex and $L(0) = 0$
+
+$L(X) = x^2$
+
+$T(C) = \min(n \ge 0 : c(n) \ge c)$
+
+simulation time (number of iterations) within budget $c$
+
+\begin{definition} Risk function
+
+    $R(c) = E[L(\hat\theta_{\tau(c)} - \theta)]$
+
+    $\hat\theta_{\tau(c)} - \theta$: error
+
+\end{definition}
+
+$L(x) = x^2\text{ if } \Var(\hat\theta_n) \le K \le \infty$
+
+$\lim_{c\to\infty} R(c) = 0$
+
+\begin{definition}
+
+    $\exists r > 0, \xi > 0$ such that $\lim_{c\to\infty} c^r R(c) =
+    \frac{1}{\xi}$
+
+    $r$: asymptotic efficiency rate\\
+    $\xi$: asymptotic efficiency
+
+\end{definition}
+
+\textbf{Proposition}: $\{\hat\theta_n, c(n)\}$ is simulation output. Let
+$L(.)$ be a loss function. $L'(0) = 0$. $L''(0) > 0$.
+
+Assume $n^\gamma(\hat\theta_n - \theta) \implies \mathcal{N}(0,
+\sigma^2)$
+
+$\exists \beta > 0, \lambda > 0: n^{-\beta}C(n) \to \lambda$, where
+$\lambda$ is unit CPU cost.
+
+$r = \frac{2\gamma}{\beta}, \xi =
+\frac{2}{L''(0)\lambda^{2\gamma}\sigma^2}$
+
+Given equal rates of convergence, confer the estimator with the lowest
+variance, because this will result in a smaller confidence interval.
+(Meaning we can achieve a good result with fewer iterations of our
+simulation.)
+
+\subsection{Variance reduction methods}
+
+\begin{align*}
+    \theta & = E[X] & \text{might be very complicated!} \\
+           & = \int_\omega h(w)\mathbb P(d\omega) \\ 
+           & = \int_S x F(dx) \\
+\end{align*}
+
+$\beta = E[\hat\theta-\theta]$
+
+MSE $= E[(\hat\theta - \theta)^2]$
+
+\begin{enumerate}
+    \item Correlation methods
+        \begin{itemize}
+            \item Antithetic
+            \item Control
+        \end{itemize}
+    \item Partition methods (``sampling'')
+        \begin{itemize}
+            \item Latin hypercube, i.e. quasi monte carlo methods
+            \item Stratified sampling
+        \end{itemize}
+    \item Change measure
+        \begin{itemize}
+            \item Importance sampling
+            \item Conditional monte carlo
+        \end{itemize}
+\end{enumerate}
+
+\subsection{Antithetic variables}
+
+Suppose two rvs with same distribution, with $E(x_i) = \theta$.
+
+Then, $E(\frac{X_1 + X_2}{2} = \theta$, and the mean can be used as an
+estimator.
+
+\[
+    \Var\left(\frac{X_1+X_2}{2}\right) = \frac{1}{4}(\sigma_{x1}^2 +
+    \sigma_{x2}^2 + 2 \sigma_{x1x2}) = \frac{1}{2}(\sigma^2 + \Cov(X_1,X_2))
+\]
+
+The inverse random variable function is helpful for antithetic variance
+reduction. Kind of got lost on why and how.
+
+Reliability networks.
+
+\subsection{Control variables}
+
+$\theta = E[X] = \int_\Omega h(\omega)\matchcal P(dw)$
+
+Let $Y = g(\omega)$ be a rv such that $E(Y) = \mu$ is known. Then
+$E(X^c) = \theta$; for any $c\in\mathbb R$ where $\mathbb X^c(\omega) =
+h(\omega) + c( g(\omega) - \mu)$
+
+Endogenous variables: variables generated during simulation (little or
+no extra computing effort)
+
+Exogenous variables: something else.
+
+\subsection{Latin Hypercube}
+
+$X: \Omega \to \mathbb R$, $X$ is defined as $F^-1(U), U \sim U(0,1)$
+
+$E[X] = E[h(U)] = \int_0^1 h(u)du$
+
+$E[X] \approx \frac{1}{n}\sum_{k=1}^n h(X_k)$
+
+Monte Carlo $\{X_k\} \sim \text{iid} U(0,1)$, sample avg $=
+\frac{1}{n}\sum_{k=1}^n h(X_k)$
+
+$X_n = \frac{1}{n}$ is deterministically balanced.
+
+As I understand it, the basic idea is that we are deliberately getting a
+single sample for each bucket of with $\frac{1}{n}$, which gives us a
+\emph{saturated} sampling of the uniform distribution (up to the
+interval of $\frac{1}{n}$), in the minimum number of steps.
+
+\subsection{Conditional Monte Carlo}
+
+Something about EVVE's law. (In probability 4 slide set.)
+
+Vertical bar means conditional on the $i$th set.
+
+Ross assumes that $n_i = np_i$, which is problematic? Not sure, I'm a
+little lost at this point.
+
+It's really hard to keep focus for the entire duration of this lecture.
+She also moves faster than I can keep up. Maybe faster than everybody
+can keep up? But maybe my checkout threshold is a little lower? I don't
+know; I do ok with movies and television.
+
+\subsection{Change of measure}
+
+When we are simulating until a random stopping time which has a
+relatively small probability of occurring, there is a chance that this
+stopping time will \emph{never occur}. This poses a challenge for
+simulation, because we would like to be able to stop our simulation
+before the end of time.
+
+We can use a change of measure for this. It's in some slides somewhere.
+Probably in the books as well.
+
+Taking a magnet and blowing some shit up on the region of importance,
+importance sampling. It goes sampling on the region of importance.
+There's many different ways of doing that, finished the example of the
+insurance.
+
+Finish reading on our own time.
+
+Ross has a lot of different examples. Lundberg transformation is
+insurance jargon. Ross calls it exponential tilting. Relating importance
+sampling with tilting of distributions.
+
+The idea with variance reduction using importance sampling, if I choose
+an appropriate different measure, proabbility, we are changing the
+probability, changing the function, the integrand, changing the
+measure, and these partition methods are sampling ideas. It doesn't
+change one or the other, but it changes the way that we explore the
+space.
+
+How do we choose variance reduction? It's a bit of an art. When is there
+variance reduction with rare events, whenever the likelihood rate is
+$\le 1$ such that $h(\omega) \ne 0$, then somethingsomethingsomething.
+
+Of course, we don't know theta. We want to estimate the probability of
+event a. If we could do this, then the variance would be reduced.
+
+Gamblers ruin. Game finishes at 0 or $K$, which is winner takes all.
+
+We would like to know when we are going to finish on the winning spot.
+But suppose that the probability is smaller than the probability of
+losing. If we do simulations, then most of the time, or more times than
+not, we are going to end up on the losing side, rather than the winning
+side. A lot of simulations where we are not going to get a whole lot of
+information.
+
+So we change the parameters. We are going to simulate the same markov
+chain / random walk, but with different probabilities. On every
+trajectory that finishes on the winning side, it means that we have done
+$\frac{\tau - K}{2}$ steps to the left and $\frac{\tau - K}{2}$ steps to the
+left.
+
+\subsection{Conditional Monte Carlo}
+
+First part of EVVE was used to motivate stratified sampling, second part
+is going to be used to motivate conditioning. This is what it's telling
+me. An example, we want to estimate $\pi$.
+
+\end{document}

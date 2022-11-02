@@ -1,0 +1,269 @@
+\documentclass{article}
+
+
+\usepackage{/home/morgan/code/hunter}
+\usepackage{/home/morgan/code/classnotes}
+
+\DeclareMathOperator{\Var}{Var}
+
+\newcommand\M[1]{\textbf{#1}}
+\newcommand\Prob[1]{P\{#1\}}
+
+
+\title{Chapter 5: Analysis of Markov Chains}
+\course{Modeling and Simulation}
+\author{Morgan Wajda-Levie}
+
+\begin{document}
+
+\setcounter{section}{3}
+\section{Ross introduction to Probability: Markov Chains}
+\setcounter{subsection}{5}
+
+\subsection{Mean time spent in transient states}
+
+\begin{definition}
+    \item[\textbf{recurrent state}] Upon leaving a recurrent state, the
+        probability of returning to that state is 1.
+    \item[\textbf{transient state}] Upon leaving a transient state, the
+        probability of returning to that state is less than 1. (Meaning
+        that there exists some class of states which are accessible from
+        a transient state, but do not communicate with that state.)
+\end{definition}
+
+
+\newcommand\PT{\textbf{P}_T}
+Consider finite state Markov chain, let $\PT$ be the transition
+probabilities from transient states into transient states. ($T$ is not a
+closed class of states, so not all rows of $\PT$ sum to 1, because
+transitions out of class $T$ are not included, and class $T$ can only be
+transient if there exists some other class of accessible states.)
+
+$s_{ij}$: expected number of time periods chain is in state $j$, given
+start in state $i$.
+
+$\delta_{i,j} = 1$ when $i=j$, otherwise it is $0$.
+
+Conditioning on initial transition,
+\begin{align*}
+    s_{ij} &= \delta_{i,j} + \sum_k \textbf{P}_{ik}s_{kj} \\
+           &= \delta_{i,j} + \sum_{k=1}^t \textbf{P}_{ik}s_{kj}
+\end{align*}
+
+($s_{kj}$ must equal $0$ when $k$ is a recurrent state, because it is
+impossible to go from recurrent state to a transient state)
+
+Let $\M S$ be the matrix of values $s_{ij},i,j=1,\ldots,t$.
+
+Therefore, $\M S = \M I + \PT \M S$.
+
+So, $\M S = (\M I - \PT)^{-1}$
+
+i.e. time spent in state $j$, given start in state $i$ is equal to entry
+$i,j$ in the inverse of $\M I - \PT$.
+
+\textbf{Gambler's ruin example}
+
+Gambler's ruin notation, for later: $p$ is the probability of the
+gambler \emph{winning}, i.e. moving from the current state into the
+higher state. The probability of the gambler losing, i.e. moving into a
+lower state, is $1 - p$. $N$ is the number of the success state, when
+the gambler has ``won it all'' and can go home happy.
+
+$f_{ij}$, the probability that chain ever transitions into $j$ given start
+in $i$ (where $i,j \in T$) can be determined from $\PT$. Start by
+deriving $s_{ij}$, conditioned on whether state $j$ has been entered.
+
+\begin{align*}
+    s_{ij} = & E[\text{time in }j \mid \text{start in }i,\text{ ever transit to }j]
+    f_{ij} \\
+             & + E[\text{time in }j \mid \text{start in }i,\text{ never transit to }j]
+             (1 - f_{ij}) \\
+    = & (\delta_{i,j} + s_{jj})f_{ij} + \delta_{i,j}(1 - f_{i,j}) \\
+    = & \delta{i,j} + f_{ij}s_{jj}
+\end{align*}
+
+\[
+    f_{ij} = \frac{s_{ij} - \delta_{i,j}}{s_{jj}}
+\]
+
+\textbf{Another gambler's ruin example}
+
+If we are interested in the expected time to reach some set of states
+$A$, we can treat all states in $A$ as absorbing, making all accessing
+states outside of $A$ transient. We can then solve as above.
+
+\subsection{Branching processes}
+
+\textbf{Branching processes} are a class of Markov chains with wide
+variety of applications.
+
+Consider: population capable of reproducing, where probability that any
+individual will have produced $j$ offspring in its lifetime is $P_j$. If
+$X_n$ denotes the size of the $n$th generation, it follows that $X_n,
+n \in \mathbb{Z} \ge 0$ is a Markov chain, where $X_0$ is the size of
+the initial population.
+
+State 0 is recurrent, because the size of the population can only change
+through reproduction, and all other states are transient, meaning that
+the population will either die out or grow perpetually.
+
+Offspring of a single individual:
+
+\[
+    \mu = \sum_{j=0}^\infty j P_j
+\]
+
+Variance of the number of offspring produced by single individual:
+
+\[
+    \sigma^2 = \sum_{j=0}^\infty (j - \mu)^2P_j
+\]
+
+If $X_0 = 1$ (we have not stipulated sexual or other paired reproduction):
+
+\[
+    X_n = \sum_{i=1}^{X_{n-1}}Z_i
+\]
+
+Where $Z_i$ is number of offspring of the $i$th individual of the
+$(n-1)$st generation. Conditioning on $X_{n-1}$:
+
+\begin{align*}
+    E[X_n] & = E[E[X_n \mid X_{n-1}]] \\
+           & = E\left[E\left[\sum_{i=1}^{X_{n-1}}Z_i \mid X_{n-1} \right]\right] \\
+           & = E[X_{n-1}\mu] \\
+           & = \mu E[X_{n-1}]
+\end{align*}
+
+Since $E[X_0] = 1$, $E[X_n] = \mu^n$. (Intuitive result, since branching
+is understood to be an exponential function, and $\mu$ is equivalent to
+the expected, or average, branching factor.)
+
+\[
+    \Var(X_n) = E[\Var(X_n \mid X_{n-1})] + \Var(E[X_n \mid X_{n-1}])
+\]
+
+Because $X_n$, given $X_{n-1}$ is just the sum of $X_n$ random variables
+with the same distribution:
+
+\[
+    E[X_n \mid X_{n-1}] = X_{n-1}\mu, \quad
+    \Var(X_n \mid X_{n-1}) = X_{n-1}\sigma^2
+\]
+
+\followup{Really get comfortable with variance and covariance, jeez.}
+
+\[
+    \Var(X_n) =
+    \begin{cases}
+        \sigma^2\mu^{n-1}\left(\frac{1-\mu^n}{1-\mu}\right),
+            & \text{if }\mu \ne 1 \\
+        n\sigma^2,
+            & \text{if }\mu = 1
+    \end{cases}
+\]
+
+Let $\pi_0$ denote probability that population will die out, when
+$X_0=1$.
+
+\[
+    \pi_0 = \lim_{n\to\infty} P \{X_n = 0 \mid X_0 = 1\}
+\]
+
+$\pi_0 = 1$ if $\mu < 1$, because $\mu^n\to0$ when $\mu < 1$.
+Furthermore, it can be shown that $\pi_0 = 1$ when $\mu=1$. (All we need
+is one generation to not reproduce, I guess.)
+
+When $\mu > 1$:
+
+\begin{align*}
+    \pi_0 & = P\{\text{population dies out}\} \\
+          & = \sum_{j=0}^\infty
+          P\{\text{population dies out} \mid X_1 = j\} P_j \\
+\end{align*}
+
+\[
+    P\{\text{population dies out} \mid X_1 = j\}
+    = \pi_0^j
+\]
+
+thus
+
+\[
+    \pi_0 = \sum_{j=0}^\infty \pi_0^j P_j
+\]
+
+
+\subsection{Time reversible Markov chains}
+
+\begin{definition}
+    An \textbf{ergodic Markov chain} is a Markov chain which will
+    eventually visit all states in the process.
+\end{definition}
+
+\begin{definition}
+    The \textbf{stationary probability} $\pi_j, j \ge 0$, also called
+    the \emph{long run proportion} is the probability of being in state
+    $j$ at any given time in a process.
+\end{definition}
+
+Consider a stationary ergodic Markov chain, with transition
+probabilities $P_{ij}$ and stationary probabilities $\pi_i$, and suppose
+that, at some time $n$, we trace the sequence of states \emph{backward}
+through time.  This sequence is also a Markov chain, with transition
+probabilities $Q_{ij}$:
+
+\begin{align*}
+    Q_{ij} &= \Prob{X_m = j \mid X_{m+1} = i} \\
+           &= \frac{\Prob{X_m = j, X_{m+1} = i}}
+           {\Prob{X_{m+1} = i}} \\
+           &= \frac{\Prob{X_m = j} \Prob{X_{m+1} = i \mid X_m = j}}
+           {\Prob{X_{m+1} = i}} \\
+           &= \frac{\pi_j P_{ij}}{\pi_i}
+\end{align*}
+
+(In other words, the probability of state $j$ preceding a given state
+$i$ is the probability of being in state $j$ times the probability of
+transition from $i$ to $j$, divided by the probability of being in state
+$i$.)
+
+See text for a proof that this is a Markov chain.
+
+If $Q_{ij} = P_{ij}$ for all $i,j$, then the process is said to be
+time reversible. Also expressed as $\pi_i P_{ij} = \pi_j P_{ji}$
+for all $i,j$.
+
+See book for some more proofing on this.
+
+\textbf{Random walk example}
+
+
+
+\subsection{}
+\subsection{}
+
+\setcounter{section}{5}
+\section{Ross introduction to Probability:}
+\setcounter{subsection}{4}
+\subsection{}
+\subsection{}
+\subsection{}
+
+\setcounter{section}{3}
+\section{Taylor and Karlin:}
+\setcounter{subsection}{7}
+\subsection{}
+
+\section{Taylor and Karlin:}
+\setcounter{subsection}{3}
+\subsection{}
+
+\setcounter{section}{5}
+\section{Taylor and Karlin:}
+\subsection{}
+\subsection{}
+\subsection{}
+\subsection{}
+
+\end{document}
