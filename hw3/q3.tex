@@ -1,0 +1,86 @@
+\begin{solution}
+    \begin{enumerate}
+        \item
+            Because the state following any state $j$ is always chosen
+            from states in $\{0,1,\ldots,j-1\}$, we can see that this
+            process will always monotonically decrease towards $0$. We
+            can see that, if a given state $k$ is stated as a fraction
+            of the state $j$ that proceeds it, that
+            \[
+                m \prod_{n=0}^t \frac{k}{X_n}
+            \]
+            will shrink towards $0$ as $t$ approaches $\tau$, where
+            $\tau$ is the total number of steps until the process is
+            absorbed in state $0$.
+
+            We can calculate an expected value of $k$, given $j$, by
+            summing the possible values of $k$, multiplied by their
+            respective probability, given $j$.
+            \begin{align*}
+                \frac{2}{j^2} \sum_{k=1}^{j-1}k^2
+                &= \frac{2(j-1)(j)(2j)}{6j^2}\\
+                &= \frac{2j^3-2j^2}{3j^2}\\
+                &= \frac{2j-2}{3} \\
+                \mathbb E[k \mid j] &= \frac{2j-2}{3}
+            \end{align*}
+
+            Substituting $k$ for its expected value, we can see that,
+            given sufficiently large $m$:
+
+            \begin{align*}
+                1 &= \left\lceil m\prod_{n=0}^\tau \frac{2 X_n-2}{3 X_n}
+                \right\rceil\\
+                  & \approx  m \prod_{n=0}^\tau \frac{2}{3}\\
+                  &= m \left(\frac{2}{3}\right)^\tau\\
+                  \text{such that}\\
+                    \mathbb E[\tau] &=2\log_3m
+            \end{align*}
+
+            Because $O()$ represents an upper bound, this value is also
+            $O(log_2m)$.
+
+        \item
+
+            The simulation starts with a value $m$ (the initial state),
+            and continuously samples a new value $k$ based on the
+            current state, until $k = 0$. To generate the random
+            variable $k$ according to the given probabilities, a reverse
+            linear search is used, starting with the largest and most
+            probable value of $k$, and decreasing $k$ until the value
+            according to $1 - F(k)$. Moving backwards improves
+            performance over a forward search by a factor of $\approx
+            2$.
+
+            In order to guarantee no more than a 5\% error rate, I
+            performed the simulation in batches, gathering the mean
+            simulated value and the sample variance. After each batch,
+            or \emph{replication}, I calculated the running average for
+            the variance, and divided this by the total simulations.
+            Once this value was within my desired confidence ($<0.05$),
+            I returned the observed mean and variance.
+
+            While I could not calculate the mean iterations required for
+            an arbitrary $m$, I tested a number of large values of $m$,
+            and found that the theoretical minus the observed was always
+            less than 1 (and greater than 0) and generally less than
+            0.5, so I would say that this is reasonably consistent.
+
+            \newpage
+            \begin{python}
+
+def sample_k(j):
+    """Generate a value for k, given j, according to specified
+    probabilities."""
+    u = random()
+    k = j - 1
+    cdf = 2 * k / j**2
+    while k > 0:
+        if u <= cdf:
+            return k
+        k -= 1
+        cdf += 2 * k / j**2
+    return 0
+            \end{python}
+
+    \end{enumerate}
+\end{solution}

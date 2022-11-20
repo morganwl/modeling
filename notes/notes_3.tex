@@ -1,0 +1,60 @@
+\documentclass{article}
+
+
+\usepackage{/home/morgan/code/hunter}
+\usepackage{/home/morgan/code/classnotes}
+
+\DeclareMathOperator{\Var}{Var}
+
+\newcommand\M[1]{\textbf{#1}}
+\newcommand\Prob[1]{P\{#1\}}
+
+
+\title{Chapter 3: The Simulation Game / Intro Markov Chains}
+\course{Modeling and Simulation}
+\author{Morgan Wajda-Levie}
+
+\begin{document}
+
+\setcounter{section}{3}
+\section{Ross Introduction to Probability}
+\subsection{}
+\subsection{}
+\subsection{}
+
+\setcounter{section}{2}
+\section{TK: Markov Chains Introduction}
+\subsection{}
+\subsection{}
+\subsection{}
+\subsection{First Step Analysis}
+\subsubsection{Simple First Step Analysyes}
+
+Let
+\begin{align*}
+    T &= \min\{n \ge 0; \text{Absorbing}(X_n)\}
+      & \text{(Time til absorption)}\\
+    u_i,j &= \Prob{X_T = j \mid X_0 = i}
+          & \text{(Prob. of end j, given initial i)}\\
+    v_i &= \mathbb E[T \mid X_0 = i]
+        & \text{(Expected time until absorption)}
+\end{align*}
+
+There are some examples in here on using the law of total probability to
+analyze 2 and 4-state matrices, but I don't feel like I have a good
+general rule yet.
+
+\subsection{}
+\subsection{}
+\setcounter{subsection}{7}
+\subsection{Branching Processes (see 4th edition)}
+
+\section{TK: The Long Run Behavior of Markov Chains}
+\subsection{}
+\subsection{}
+\subsection{}
+\subsection{}
+\setcounter{subsection}{5}
+\subsection{}
+
+\end{document}

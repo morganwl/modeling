@@ -7,7 +7,7 @@
 \DeclareMathOperator{\Var}{Var}
 
 \newcommand\M[1]{\textbf{#1}}
-\newcommand\Prob[1]{P\{#1\}}
+\newcommand\Prob[1]{\mathbb P\{#1\}}
 
 
 \title{Chapter 5: Analysis of Markov Chains}
@@ -245,7 +245,29 @@ See book for some more proofing on this.
 
 \setcounter{section}{5}
 \section{Ross introduction to Probability:}
+\setcounter{subsection}{2}
+\subsection{Birth and death processes}
 \setcounter{subsection}{4}
+
+\begin{definition}
+    A \textbf{birth and death process} is a continuous time Markov chain
+    with states $\{0,1,\ldots\}$, for which transitions from state $n$
+    may go only to either state $n-1$ or state $n+1$, and where arrivals
+    are exponential with rate $\lambda_n$ and departures are exponential
+    with rate $\mu_n$, where $n$ is the current state.
+\end{definition}
+
+\begin{align*}
+    v_o &= lambda_0, &&\quad\text{(interarrival time at state 0)}\\
+    v_i &= \lambda_i + \mu_i, & i > 0 &\quad\text{(interarrival time at state
+    i)}\\
+    P_{01} &= 1,\\
+    P_{i,i+1} &= \frac{\lambda_i}{\lambda_i + \mu_i}, & i > 0\\
+    P_{i,i-1} &= \frac{\mu_i}{\lambda_i + \mu_i}, & i > 0\\
+\end{align*}
+
+If $\mu_n = 0$, the process is a \textbf{pure birth process}.
+
 \subsection{}
 \subsection{}
 \subsection{}
@@ -265,5 +287,70 @@ See book for some more proofing on this.
 \subsection{}
 \subsection{}
 \subsection{}
+
+\setcounter{section}{4}
+\section{Slides}
+
+\subsection{Gambler's Ruin}
+
+\begin{eqnarray*}
+    S = \{0,\ldots,N\}\\
+    P_{i,i+1} = p \text{ where } i>1\\
+    P_{i,i-1} = q = 1 - p \text{ where } i>1\\
+    P_{0,0} = P_{N,N} = 1
+\end{eqnarray*}
+
+Let $\tau$ denote the total number of rounds in a game, that is:
+
+\begin{eqnarray*}
+    \tau = \min(n: X_n \in \{0, N\})) \\
+    u_i = \Prob{X_\tau = 0 \mid X_0 = i} \\
+    v_i = \mathbb E [\tau \mid X_0 = i]
+\end{eqnarray*}
+
+For all $i \notin \{0,N\}$:
+
+\[
+    \Prob{X_\tau = 0 \mid X_0 = i} = \sum_{j \in S}P_{i,j} \Prob{X_\tau
+        \mid X_0 = j}
+\]
+
+i.e. the sum of the probabilities of reaching state 0, having started in
+every state, times the one-step probability of transitioning from $i$ to
+that state.
+
+Because gambler's ruin is a random walk, meaning it is only possible to
+transition to an adjacent state, this yields:
+
+\begin{allign*}
+    u_i &= pu_{i+1} + \qu_{i-1}; i \notin \{0,N\} \\
+    v_i &= 1 + pv_{i+1} + qv_{i-1}; i \notin \{0,N\}
+\end{allign*}
+
+This can be solved as a system of equations.
+
+\subsection{Absorption Analysis}
+
+Consider the MC $\{X_n\}$ with finite state space $S = \{1,\ldots,N\}$
+and transition matrix
+\[
+    P = \begin{pmatrix}Q & R \\ \textbf{0} & I\end{pmatrix},
+    Q: r \times r, R: r \times (N-r+1)
+\]
+
+Where $Q$ represents the transition probabilities from one transient
+state to another, $R$ the transition probabilities from transient states
+to absorbing states. Let $T=\{1,\ldots,r\}$ be the set of all transient
+states and $A=\{r+1,\ldots,N\}$ be the set of all absorbing states.
+
+\begin{align*}
+    \tau = \min(n: X_n \in A)
+\end{align*}
+
+General solution using \emph{first step analysis}:
+\[
+    u_{i,k} = \sum_{j \in T}u_{j,k}P_{i,j} + P_{i,k};
+    i \in T, k > r
+\]
 
 \end{document}

@@ -1,0 +1,134 @@
+\begin{solution}
+    \begin{enumerate}
+        \item Because infection is conditioned on the occurrence of an
+            event in a Poisson process, and recovery occurs after an
+            exponential time $\mu$, both infection and recovery occur
+            in continuous time. Furthermore, because the rates infection
+            and recovery are both functions of the current number of
+            infected individuals, the process is wholly dependent on the
+            current number of infected people, $X(t)$, meaning that
+            $\{X(t), t \ge 0\}$ is a CTMC. At any given time, $X(t)$
+            must either remain constant, or change by the addition of
+            one infected individual (\emph{birth}) or the recovery of
+            one infected individual (\emph{death}), meaning that the
+            process is a \emph{birth and death process}.
+
+            In $M_1$, individuals can never recover, meaning that $X(t)$
+            is monotonically increasing. For this reason, no states
+            communicate with each other, meaning that the process
+            consists of $N + 1$ distinct classes, two of which are
+            absorbing, $X(t) = 0$ and $X(t) = N$, and the rest of which
+            are transient. $X(t) = 0$ is not an accessible state, but
+            could be reached if $X(0) = 0$, in which case no further
+            infections could occur. Transmission occurs when a contact
+            occurs between one healthy and one infected individual.
+
+            Using the law of total probability,
+            \begin{align*}
+                \Prob(\text{Infection}\mid\text{Contact})
+                &=
+                \Prob(\text{Transmission} \mid \text{MixedPair})
+                \Prob(\text{MixedPair} \mid \text{Contact})\\
+                &= pX(t)(N-X(t))\frac{2}{N(N - 1)}
+            \end{align*}
+
+            Meaning that the rate of infection is the rate of contact
+            times the probability of infection, given contact:
+            \[
+                q_{i,i+1} = \frac{2\lambda p i(N-i)}{N(N-1)}
+            \]
+
+            In $M_1$, the aggregate rate is the same as $q$, because
+            the probability of recovery is 0. If I understand the
+            concept of the embedded Markov chain correctly, this is the
+            state transition that occurs at every event, meaning that
+            $P_{ij}=q_{ij} / \lambda$.
+            \begin{align*}
+                P_{i,i+1} &= \frac{2pi(N-i)}{N(N-1)}\\
+                P_{ij} &= 0 \text{ for all other values of j}
+            \end{align*}
+
+            In $M_2$, $X(t)$ all states communicate except for $X(t) =
+            0$, meaning that there are two classes, the absorbing class
+            $\{X(t) = 0\}$ and the transient class, $\{0 < X(t) \le
+            N\}$. The transmission (or \emph{birth}) rate remains the
+            same, but there is now a recovery (or \emph{death}) rate of
+            $\mu X(t)$. This makes the aggregate rate:
+            \[
+                v_i = \frac{2\lambda p i(N-i)}{N(N-1)} + \mu i
+            \]
+
+            \begin{align*}
+                P_{i,i+1} &= \Prob(\text{Infection} \mid \text{Contact},i)
+                \Prob(\text{Contact})
+                (1 - \Prob(\text{Recovery}\mid i))\\
+                P_{i,i} &= \Prob(\text{Infection} \mid \text{Contact}, i)
+                \Prob(\text{Contact})\Prob(\text{Recovery}\mid i)\\
+                P_{i,i-1} &= (1- \Prob(\text{Infection} \mid
+                \text{Contact},i))\Prob(\text{Recovery}\mid i)
+            \end{align*}
+
+        \item
+            [Is using psuedocode to exhibit the solution different from
+            using psuedocode to simulate? This is unclear.]
+
+            We can use discrete event simulation for both $M_1$ and
+            $M_2$.
+
+            \begin{python}
+def simulate_m1(total_pop, initial_infected):
+    t = 0
+    state = {'total': total pop, 'infected': initial_infected}
+    future_events = PriorityQueue()
+    future_events.put(Contact()) # initializes contact with 
+                                 # arrival time per Poisson dist.
+    while state['infected'] != state['total']:
+        event = future_events.get() # get soonest event
+        event.trigger(state)     # transmit illness per P_{ij}
+        future_events.put(event.get_next()) # queue next contact
+        t = event.time
+    return t
+\end{python}
+
+            We can adapt this for $M_2$ by adding a recovery event for
+            each contact that results in an infection. (This is not the
+            most efficient solution to simulate, but it is the most
+            efficient solution to code!)
+
+            \begin{python}
+def simulate_m2(total_pop, initial_infected):
+    t = 0
+    state = {'total': total pop, 'infected': initial_infected}
+    future_events = PriorityQueue()
+    future_events.put(Contact()) # initializes contact with 
+                                 # arrival time per Poisson dist.
+    while state['infected'] != state['total']:
+        event = future_events.get() # get soonest event
+        if event.trigger(state): 
+            # Contact.trigger() returns True if infection occurs
+            future_events.put(Recovery(t)) # add recovery event
+        # transmit illness per P_{ij}
+        future_events.put(event.get_next()) # queue next contact
+        t = event.time
+    return t
+            \end{python}
+
+        \item See above for a simulation for $M_2$. I'm not sure what
+            values I am to report, as the outcome is dependent on the
+            size of the population.
+
+        \item The simplest, though possibly not most efficient way,
+            would be to add an additional rv \emph{Recovered}, which
+            would track the number of individuals who have recovered.
+            Now,
+            \[
+                \Prob(\text{MixedPair} \mid \text{Contact}, i,
+                \text{Recovered}) = 
+                \frac{2i(N - i - \text{Recovered})}{N(N-1)}
+            \]
+            In other words, possible pairs between infected individuals
+            and healthy individuals who have not yet recovered, over
+            total possible pairs.
+
+    \end{enumerate}
+\end{solution}

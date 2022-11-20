@@ -1,0 +1,109 @@
+\documentclass{article}
+
+
+\usepackage{/home/morgan/code/hunter}
+\usepackage{/home/morgan/code/classnotes}
+
+\DeclareMathOperator{\Var}{Var}
+
+\newcommand\M[1]{\textbf{#1}}
+\newcommand\Prob[1]{\mathbb P(#1)}
+
+
+\title{Chapter 6: Output Analysis}
+\course{Modeling and Simulation}
+\author{Morgan Wajda-Levie}
+
+\begin{document}
+
+\setcounter{section}{5}
+\section{Handwritten Lecture Notes}
+
+The outcome of a simulation will be a vector of performance measures.
+Consider one such measure $\mathcal X$. The goal of a simulation is to
+estimate $\theta = \mathbb E[X]$.
+
+A sequence of random variables, $X_1, X_2, \ldots$ with common mean
+$\theta = \mathbb E(X_i), i \in \mathbb N$ is said to satisfy:
+
+The \emph{weak law of large numbers} if the sample average converges to
+$\theta$ in probability, that is, $\forall \epsilon > 0$:
+\[
+    \lim_{n\to\infty}\Prob{\left| \frac{1}{n}\sum_{k=1}^n \mathcal X_k -
+    \theta \right| > \epsilon} = 0
+\]
+
+The \emph{strong law of large numbers} if the sample average converges
+a.s. to $\theta$, that is:
+\[
+    \Prob{\omega: \lim_{n\to\infty} \frac{1}{n}\sum_{k=1}^n \mathcal
+    X_k(\omega) = \theta} = 1
+\]
+
+In other words, under WLLN, the sample average is likely to be near
+$\mu$, but the average can be greater than $\epsilon$ infinitely often.
+This is impossible if SLLN holds.
+
+\textbf{TO-DO: Circle back on central limit theorems}
+
+\subsection{Confidence Intervals}
+
+Let $\hat\theta_n$ be the estimator of $\theta$, and let $\mathcal
+F_n(.)$ be its distribution.
+
+For a given $\theta$, $h_1(\theta), h_2(\theta)$ form an interval that
+contains $(1 - \alpha)\%$ of the distribution.
+
+A \emph{confidence interval} is a random interval for $\theta$,
+$I(\hat\theta_n)$ such that:
+\[
+    \Prob{\theta \in I(\hat\theta_n)} = 1 - \alpha
+\]
+
+Define $h_1,h_2$ such that $F_n(h_1(\theta)) = \alpha/2$,
+$F_n(h_2(\theta)) = 1 - \alpha/2$.
+
+\[
+    I(\hat\theta_n) = [h_2^{-1}(\hat\theta_n), h_1^{-1}(\hat\theta_n)]
+\]
+will be a CI at significance level $\alpha$.
+
+\subsubsection{Example}
+
+Let $\{X_n\} \sim \text{ iid } \mathcal N(\theta, \sigma^2)$. The
+corresponding confidence interval at $\alpha$ is:
+\[
+    \hat\theta_n \pm t_{n-1,1-\alpha/2} \sqrt{\frac{S_n^2}{n}},
+\]
+where $t_{n-1,1-\alpha/2}$ is the $(1-\alpha/2)$-th quantile of the
+student-t distribution with $n-1$ degrees of freedom.
+
+When exact distribution is not known analytically, a CLT can provide an
+approximate CI for sample means. (How does it do this? I don't know.)
+
+Given an approximate CI of the form $I(\hat\theta_n)$ at significance
+$\alpha$, let
+\[
+    P_{n,\alpha} = \Prob{0 \in I(\hat\theta_n)}.
+\]
+We call this probability the \emph{coverage} of the CI.
+
+Ideally, $P_{n,\alpha} \approx 1 - \alpha$, but this might require
+intractable number of samples. Actual coverage can be very difficult to
+calculate.
+
+Suppose that a CLT holds for $\hat\theta_n$, so that as $n\to\infty$,
+\[
+    \sqrt n \frac{(\hat\theta_n - \theta)}{\sigma} \Rightarrow \mathcal
+    N(0,1)
+\]
+then, for large $n$, $\hat\theta_n$ has an approximate normal
+distribution $\mathcal N(\theta, \sigma^2/n)$. Then
+\[
+    \Prob{
+        \theta \in [\hat\theta_n - z_{1-\alpha/2} \frac{\sigma}{\sqrt n},
+    \hat\theta_n + z_{1-\alpha/2} \frac{\sigma}{\sqrt n}]}
+    \approx 1 - \alpha.
+\]
+
+\end{document}

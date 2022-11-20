@@ -1,0 +1,176 @@
+\documentclass[12pt]{article}
+
+\usepackage{../modelset}
+
+
+\title{\bfseries Computer Modeling  and  Simulation}
+\author{Morgan Wajda-Levie}
+\date{November 6, 2022}
+
+
+\begin{document}\sf
+
+\lhead{ } \chead{ } \rhead{ } \lfoot{ } \cfoot{\sf -- page
+\thepage~  of  \pageref{LastPage}  --  } \rfoot{ }                                                     %            <=====   PAGE NUMBERING
+
+\maketitle
+
+%\null \vskip - 5 cm
+
+\begin{center}
+\vskip - 1.5 em { {\bfseries Problem Set 3}}
+\end{center}
+
+\begin{problem}\marks{15}
+    Let $P^{(i)}$ be the transition matrix of an ergodic Markov chain
+    with limit probabilities $\pi^{(i)}$, for $i=1,2$. 
+    \begin{enumerate}
+        \item \marks{5} Let $X_0=1$ be given. If the result of a coin
+            toss is Heads (H) then $\{X_n\}$ will follow the dynamics
+            given by $P^{(1)}$. Otherwise it will follow those given by
+            $P^{(2)}$. Is $\{X_n\}$ a Markov chain? If so, determine the
+            transition probabilities. Letting  $p=\Prob(H)$, calculate
+            the limiting probabilities: $\lim_{n\to\infty}
+            \Prob(X_n=i)$?
+
+        \item \marks{10} Now suppose that at each step we first throw a
+            coin. If it results $H$ then the following state is chosen
+            according to $P^{(1)}$, otherwise it is chosen according to
+            $P^{(2)}$. Is $\{X_n\}$ a Markov chain? If so, determine the
+            transition probabilities. Show  by counterexample that the
+            limit probabilities are not the same as in (a) above.
+    \end{enumerate}
+\end{problem}
+
+\input{q1}
+
+\begin{problem} \marks{10}
+Consider a population of individuals each of whom possesses two genes
+that can be either type $A$ or type $a$. Suppose that in outward
+appearance (the {\em phenotype}) type $A$ is dominant and type $a$
+recessive. Suppose that the population has stabilized, and the
+percentages of individuals having respective gene pairs $AA$, $aa$ and
+$Aa$ are $p,q,$ and $r$ Call an individual dominant or recessive
+depending on phenotype. Let $S_{11}$ denote the probability that an
+offspring of two dominant parents will be recessive, $S_{10}$ the
+probability that the offspring of one recessive and one dominant parent
+will be recessive. Compute $S_{11}$ and $S_{10}$ to show that $S_{11}=
+S_{10}^2$. These quantities are known in genetics as {\em Snyder's
+ratios}. 
+\end{problem}
+
+\input{q2}
+
+\begin{problem}\marks{20}
+An algorithm is built to find the zeroes of a function. If this
+algorithm is in state $j$ at the $n$-th step, then the probability of
+finding a zero in the next step is $1/j$. Otherwise its state will be $k
+\in \{1,2,\ldots, j-1\}$ with probability $2k^/j^2$. 
+\begin{enumerate}
+\item \marks{10} Find the mean number of iterations of the algorithm
+    when we start at state $m$ and show that this is $O(\log_2 m)$. 
+\item \marks{10} Simulate this process as a Markov chain and estimate
+    the number of iterations until the algorithm finds the zero. Explain
+    how you write the code  in order to achieve a  relative error of
+    $5\%$ in your final estimate.  Verify that your simulation results
+    are consistent with your theoretical answer above. 
+\end{enumerate}
+\end{problem}
+
+\input{q3}
+
+
+\begin{problem} \marks{25}
+There are $N$ individuals in a population, some of whom have a certain
+viral infection that spreads as follows. Contacts between two members of
+this population occur in accordance with a Poisson process of rate
+$\la$. When a contact occurs, it is equally likely to involve any of the
+$N\choose2$ pairs of individuals. If a contact involves an infected and
+a healthy individual, then with probability $p$ the non-infected one
+becomes infected. For Model 1 we assume that once infected, an
+individual remains infected throughout. In Model 2, once infected, an
+individual remains ill for an exponential amount of time with intensity
+$\mu$, after which she/he becomes healthy again. We assume no deaths
+occur, and there is no spontaneous infection. Let $X(t)$ denote the
+number of infected individuals at time $t$. 
+%For model 2 we assume that recovered individuals have life immunity so
+%they never get the infection again. 
+\begin{enumerate}
+\item \marks{5} Show that $\{X(t), t\ge 0\}$ is a continuous time Markov
+    Chain (CTMC). Specifically, show that it is a Birth and Death
+    process.  For each of the models, specify the classes of the states
+    and determine whether it is an absorbing Markov chain (identify the
+    absorbing states) or an ergodic Markov Chain. Specify for each model
+    the transition rates $q_{ij}$, the aggregate rate $v_1$ and the
+    transition probabilities of the embedded chain $P_{ij}$. 
+
+\item \marks{10} Starting with $i\ge1$ infected individuals, calculate
+    the expected time until all members of the population are infected
+    in Model 1. What is the expected time until absorption for Model 2?
+    (you may use pseudocode to exhibit the solution, if not analytical).
+
+\item \marks{5}  Explain how to do a simulation to estimate the time
+    until absorption for the process of Model 2, starting at $X(0)=1$
+    and perform the simulations. Include confidence intervals and
+    explain how you calculate the variance. [{\it Hint:} Note that you
+    have already calculated the expected value, which should help
+    validate your simulation code]. 
+
+\item \marks{5}  Explain how you would modify the model and the
+    simulation code for the following scenario: contagion follows the
+    same model as before, but once an individual is recovered, he/she
+    has life immunity so they cannot get the infection again. 
+\end{enumerate}
+\end{problem}
+
+\input{q4}
+
+\begin{problem} \marks{30}
+You have decided to do consultation for modeling, simulation and
+optimization. You offer various research  services: modeling,
+statistical analysis, optimization, software development, etc. There are
+$N$ such research stages (or ``tasks'') and they always follow a
+specific order: research of type  $n$ is always followed  by that of
+type $n-1$, for $N\ge n > 1$. The time (in hours) required to complete
+stage $n$ follows a distribution $F_n$ of mean $\mu_n$. Potential
+clients arrive according to a Poisson process of rate $\la$, and you
+take the job only if you are free at the time of arrival of the client.
+If you are already working on a problem then you do not take new
+contracts. Each problem starts at stage $n$ with probability $p_n$ and
+ends at stage $1$, following all intermediate stages. Let $X(t)=n$ if at
+time $t$ you are working on stage $n$ of a problem, and use $X(t)=0$ if
+at time $t$ you are free, waiting for new contracts. 
+\begin{enumerate}
+\item \marks{5} Under what conditions on $\{F_n\}$ is $X(t)$ a CTMC?
+    Give the rates $v_i$ and transition kernel $P_{ij}$.
+\item \marks{10} Suppose that the distributions $F_n, n=1,\ldots , N$
+    are not memoryless. You assume that you will charge $c$ dollars per
+    hour of work. Specify the regeneration points of the process (see
+    CTMC Lecture Notes) and determine the long term rate of profit. 
+\item \marks{15} In order to price your services correctly, let us
+    assume that clients are discouraged if $c$ is too big. Specifically,
+    assume that the probability that clients accept your conditions is
+    given by $P_c=(K-c)/K, 0\le c <K$. If $c\ge K$ then $P_c=0$ (no
+    client will hire you). %and define 
+%\[
+%M\eqdef \sum_{n=1}^N p_n \sum_{k=n}^N \mu_k.
+%\]
+Design a simulation to evaluate the long term profit as a function of
+$c$. Explain how you can use these simulations to determine the optimal
+value of $c$. Specify how you build the simulations for different
+values of $c$ in order to compare the long term profit rate, and how do
+you build the confidence intervals. Plus, specify if you are using a
+linear or binary search to determine the optimal value. For you
+simulation, use $K=2, \la=2$, $N=5$ and 
+\[
+    \mu= (0.3,  0.1, 0.2, 0.3, 0.1)^\top.
+\]
+
+\end{enumerate}
+
+\end{problem}
+
+\input{q5}
+
+\end{document}
+

@@ -1,0 +1,26 @@
+\begin{solution}
+    % type A: dominant
+    % type a: recessive
+    % p = probability of AA in population
+    % q = probability of aa in population
+    % r = probability of Aa in population
+
+    Let $d$ be the probability that a single parent with a dominant
+    phenotype will pass a recessive gene to their children. Because a
+    parent with a recessive phenotype will pass a recessive gene on to
+    their child w.p.1., $S_{10} = d$. Since $S_{11} = d * d$, we can
+    show that $S_{11} = S_{10}$ without even calculating the probability
+    for $d$.
+
+    Because $AA$ is unable to transmit a recessive gene, and assuming
+    the selection of genes to be transmitted is uniform, $d$ can be
+    calculated as the probability of transmitting $a$ given $Aa$ times
+    the probability of $Aa$ given $AA$ or $Aa$,
+    $d = \frac{r}{2(p + r)}$.
+
+    \begin{align*}
+        \Prob(S_{11}) &= \left(\frac{r}{2(p+r)}\right)^2 \\
+        \Prob(S_{10}) &= \frac{r}{2(p+r)}
+    \end{align*}
+
+\end{solution}

@@ -1,0 +1,113 @@
+\usepackage{amsfonts, amsmath, fancyhdr,lastpage,multirow}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{listings}
+\pagestyle{fancy}
+
+\usepackage[noend]{algpseudocode}
+\usepackage{algorithm}
+
+%% For marking tables
+
+\usepackage{tikz}
+\usetikzlibrary{fit,shapes.misc}
+
+\newcommand\marktopleft[1]{%
+    \tikz[overlay,remember picture] 
+        \node (marker-#1-a) at (0,1.5ex) {};%
+}
+\newcommand\markbottomright[1]{%
+    \tikz[overlay,remember picture] 
+        \node (marker-#1-b) at (0,0) {};%
+    \tikz[overlay,remember picture,thick,dashed,inner sep=3pt]
+        \node[draw, rectangle,fit=(marker-#1-a.center) (marker-#1-b.center)] {};%
+}
+%% End marking tables
+
+
+\topmargin = -0.8 in
+\oddsidemargin = 0.0 in
+\evensidemargin = 0.0 in
+\textheight = 9 in
+\textwidth = 6.75 in
+
+\newtheorem{theorem}{Theorem}   
+\newtheorem{result}{Result}
+\newtheorem{definition}{Defintion}  
+\newcounter{problem}
+\newcounter{solution}
+\def\bibite{$\div \hskip-0.77em \times$}
+\def\endex{\bibite \kern-3pt \bibite \kern-3pt \bibite}
+\def\theproblem{\arabic{problem}}
+\newenvironment{problem}
+     {\refstepcounter{problem}%
+    \medskip\noindent{\bfseries Problem} {\bfseries \theproblem}
+      }
+%   {\vskip-1.5em  \hphantom{a} \hfill \endex
+%     \smallskip}
+
+\newenvironment{solution}
+     { 
+         % \refstepcounter{solution}%
+         \setlength{\parskip}{0.5em}
+         \setlength{\parindent}{0em}
+         \setlength{\leftskip}{1em}
+         \medskip\noindent{\bfseries Solution to Problem {\theproblem}:}
+     }
+     {
+%     \vskip-1.5em  \hphantom{a} \hfill \endex
+      \medskip
+       }
+\newcommand{\res}[1]{Result~\ref{res:#1}}
+\newcommand{\eq}[1]{(\ref{eq:#1})}
+\newcommand{\fig}[1]{Figure~\ref{fig:#1}}
+\newcommand{\alg}[1]{Algorithm \ref{alg:#1}}
+\renewcommand{\labelenumi}{(\alph{enumi})}
+
+% Felisa's Shorthand notations
+\def\points#1{{\bfseries [{#1} points]}\\%
+}
+\def\marks#1{{\bfseries [{#1} points]}}
+\font\cmss=cmss10 scaled 1100
+\font\goth=eufm10 at 11pt
+\def\ds{\displaystyle}
+\def\Field{{\hbox{\goth F}}}
+\def\Filtration{{\mathbb F}}
+\def\borel{{\cal B}}
+\def\Real{{\mathbb R}}   % Real numbers
+\def\Int{\mathbb N}  % Integer numbers
+\def\Prob{{\mathbb P}}
+\def\Esp{{\mathbb E}}
+\def\prob{\hbox{\cmss P}}
+\def\esp{\hbox{\cmss E}}   
+\def\var{\hbox{\cmss Var}}   
+\def\cov{\hbox{\cmss Cov}}   
+\def\eqdist{{\,\buildrel \cal L\over = }\,}    
+\def\todist{{\,\buildrel \cal L\over \Longrightarrow }\,}    
+\def\eqdef{{\,\buildrel {\rm def} \over = }\,}
+%
+\def\normal{{\cal N}}  
+\def\th{{\theta}}
+\def\Th{{\Theta}}
+\def\la{{\lambda}}
+\def\ind#1{{\mathbf 1}_{\{#1\}}}
+\def\given {\,|\,}
+\def\order{{\cal O}}
+\def\GG{{\cal G}}
+\def\loss{{\cal L}}
+\def\eff{{\cal E}}
+\def\euro{ \hbox{\small{\hskip-.3em$\subset$ \hskip - 1.15 em  $-$}}}
+\def\ep{{\epsilon}}
+\newcommand\pfrac[2]{{\left(\frac{#1}{#2}\right)}}
+
+\lstnewenvironment{python}
+{%
+    % \mbox{}
+    % \vspace*{\baselineskip}
+    \lstset{
+        xleftmargin=.5\leftmargin,
+        linewidth=\linewidth,
+        language=python
+    }%
+}
+{}
