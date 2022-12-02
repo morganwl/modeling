@@ -1,0 +1,212 @@
+\documentclass[xcolor=x11names,compress, 10pt]{beamer}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{decorations.fractals}
+%% Beamer Layout %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\useoutertheme[subsection=false,shadow]{miniframes}
+\useinnertheme{default}
+%\usefonttheme{serif}
+%\usepackage{palatino}
+
+% If small caps desired:
+%\setbeamerfont{title like}{shape=\scshape}
+%\setbeamerfont{frametitle}{shape=\scshape}
+
+\setbeamertemplate{footline}[frame number] % for page numbers
+
+
+\setbeamerfont{title like}{shape=\bfseries}
+\setbeamerfont{frametitle}{shape=\bfseries}
+\setbeamerfont{alerted text}{series=\it}
+\setbeamerfont{block title}{shape=\bfseries}
+\setbeamercolor{block title}{fg=orange}
+\setbeamercolor*{lower separation line head}{bg=orange} 
+\setbeamercolor*{normal text}{fg=black,bg=white} 
+\setbeamercolor*{alerted text}{fg=orange} 
+\setbeamercolor*{example text}{fg=black} 
+\setbeamercolor*{structure}{fg=black} 
+ 
+\setbeamercolor*{palette tertiary}{fg=black,bg=black!10} 
+\setbeamercolor*{palette quaternary}{fg=black,bg=black!10} 
+
+\renewcommand{\(}{\begin{columns}}
+\renewcommand{\)}{\end{columns}}
+\newcommand{\<}[1]{\begin{column}{#1}}
+\renewcommand{\>}{\end{column}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage[noend]{algpseudocode}
+
+\begin{document}
+
+\begin{frame}
+\title{\bfseries Improvements in Bus Travel Times by Eliminating Fare
+Collection}
+\author{Morgan Wajda-Levie}
+
+
+\titlepage
+\end{frame}
+
+\section{Motivation}
+\begin{frame}
+\frametitle{Motivation}
+
+In 2019, the MTA's bus system served an average of 1.8 million riders
+per weekday in New York City. Shorter bus travel times not only improve
+the lives of nearly 2 million riders, but could encourage more riders to
+favor bus travel over private automobiles, resulting in reduced traffic
+and pollution for all New Yorkers.
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Eliminating fare collection}
+
+    While buses have multiple doors for disembarking passengers, all
+    passengers must board through the front door, where they pay a fare.
+    This fare collection imposes a bottleneck, particularly for buses on
+    high-traffic routes.
+
+    \medskip
+
+    \textbf{How would passenger travel times change if fare collection
+    were eliminated?}
+
+\end{frame}
+
+\section{Methodology}
+\begin{frame}
+\frametitle{Model}
+
+    At any given time, a bus route has the following
+    characteristics:
+    \begin{itemize}
+        \item Position of each bus along route
+        \item Number of passengers on each bus traveling to each future
+            stop along route
+        \item Number of passengers queued at each stop
+        \item Traffic conditions
+    \end{itemize}
+
+    This can be considered a \emph{continuous time Markov chain},
+    modeled as a \emph{discrete event simulation}. This is a stationary
+    problem, because we will be looking at the aggregate change in travel
+    time continuous bus service.
+\end{frame}
+
+\begin{frame}
+    \frametitle{Random variables}
+
+    \begin{itemize}
+        \item $Waiting(s, t)$: Count of passengers at stop $s$ at time
+            $t$.
+        \item $Destinations(b, s, t)$: Count of passengers on bus
+            $b$ headed to stop $s$. A passenger's destination is assumed
+            to be independent of a passenger's origin. Based on the rate
+            $destinations_s$, which should sum to be equal to
+            $departures$.
+        \item $BoardingTime(s, t)$: The combined loading and unloading
+            time of a bus at stop $s$ at time $t$, conditioned on the
+            number of passengers entering and exiting the bus, a loading
+            rate $r_{l,s,t}\sim\mathcal N$ and unloading rate
+            $r_{u,s,t}\sim\mathcal N$.
+        \item $TravelTime(s, d, t)$: The travel time from stop $s$ to
+            stop $d$, conditioned on a deterministic distance and
+            $t_{s,d,t}\sim\mathcal N$, the traffic between $s$ and $d$.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Waiting passengers}
+
+    \[
+        Waiting(s, t) \sim \text{Poisson}(\lambda^{(w)}_s, t -
+        t_{0,s})
+    \]
+
+    Each bus stop is an independent Poisson counting process which grows
+    from the moment a bus departs to the moment another bus arrives.
+    This value can be measured for every bus arrival, but must also be
+    measured again before the bus departs.
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Passenger destinations}
+
+    At boarding time, the number of passengers headed for each
+    destination is a multinomial distribution, where $P(D = s) =
+    \frac{\lambda^{(d)}_s}{\sum_{i=s}^n\lambda^{(d)}_i}$.
+
+    At any stop $s$, this value can be measured as a binomial random
+    variable, conditioned on the number of passengers currently on the
+    bus.
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Simulation Models}
+
+    I will be using Discrete Event Simulation.
+
+    \begin{itemize}
+        \item \textbf{Fare collection}: Large $r_{l,s,t}$ to account for
+            boarding through only one door and the time of fare
+            collection.
+        \item \textbf{Fareless}: $r_{l,s,t} = r_{u,s,t}$, a smaller
+            value to account for passengers boarding through all
+            available doors, without any time for fare collection.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Measured outcomes}
+
+    My goal is to measure the affect on cumulative mean travel times if
+    fare collection is eliminated. This is equal to the sum of time
+    between events for any bus $b$, times the number of passengers on
+    bus $b$.
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Preliminary results}
+
+I have constructed a prototype simulation model, but have not yet
+constructed a route to provide meaningful results.
+\end{frame}
+
+\section{Discussion} 
+
+\begin{frame}
+\frametitle{Possible extensions}
+
+\begin{itemize}
+    \item Traffic lights (not present for all stops)
+    \item Bus schedules
+    \item Connections between buses and other transit
+    \item Advanced traffic modeling
+    \item 24-hour performance with time-dependent probabilities
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Timetable}
+
+    \begin{tabular}{ll}
+        11-28 & Finish simulation code \\
+        12-5 & Finish constructing route model \\
+        12-12 & Acquire results \\
+        12-19 & Deliver report \\
+    \end{tabular}
+\end{frame}
+
+
+\end{document}
+
+
+
+
