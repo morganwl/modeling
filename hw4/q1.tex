@@ -1,0 +1,21 @@
+\begin{solution}
+
+    \begin{enumerate}
+        \item Let the variable $Y(t)$ be the number of clients arriving
+            in time $T$ and let $Z(t)$ be the number of clients arriving
+            when the station is empty in time $T$. $E[Z(t) \mid X(t) =
+            x, Y(t) = y] = y - x$. Since $X$ and $Y$ are independent
+            variables, this is the same as $E[Z(t)] = E[X(t)] -
+            E[Y(t)]$, where $X(t) = 10 + \lambda T, Y(t) = (\mu_1 +
+            \mu_2 + \mu_3)T$.
+
+            Therefore, $Z(120) = 120(8 - 6) - 10 = 230$. Penalties are
+            paid by classes 1 and 2, which occur proportionally to their
+            respective rates, so the total penalty is $230(\frac{1 *
+            3}{8} + \frac{1}{8 * 4}) = 93.4375$.
+
+        \item 
+
+    \end{enumerate}
+
+\end{solution}

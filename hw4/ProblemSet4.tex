@@ -1,0 +1,157 @@
+\documentclass[12pt]{article}
+
+\usepackage{modelset}
+
+\title{\bfseries Computer Modeling  and  Simulation}
+\author{Morgan Wajda-Levie}
+\date{December 4, 2022}
+
+\begin{document}\sf
+
+\lhead{ } \chead{ } \rhead{ } \lfoot{ } \cfoot{\sf -- page
+\thepage~  of  \pageref{LastPage}  --  } \rfoot{ }                                                     %            <=====   PAGE NUMBERING
+
+\maketitle
+
+%\null \vskip - 5 cm
+
+\begin{center}
+\vskip - 1.5 em { {\bfseries Problem Set 4}}
+\end{center}
+
+\begin{problem}\marks{15}
+The occupancy of a public bike station at time $t$, denoted $X(t)$ is
+the number of vehicles parked. In this example we assume that all
+vehicles are ready to use (no need for repairs). Let $T=120$. During the
+interval of time $(0,T]$ the process evolves as follows, starting with
+$X(0)=10$. Bikes arrive at the station following a Poisson process with
+rate $\la = 6$. There are three types of clients that arrive requesting
+a vehicle according to independent Poisson process with respective rates
+$\mu_i, i=1,2,3$. Classes 1 and 2 are clients that pay annual
+memberships, and the revenue from these clients during $[0,T)$ is the
+aggregated (deterministic) amount $(K_1 \mu_1+ K_2\mu_2)T$, where $K_1 =
+.5, K_2=.1$. Class 3 describes clients that pay per ride an amount $K_3
+= 1.25$. When annual members arrive at an empty station they are
+dissatisfied and leave (either they  walk away  or they seek other means
+of transportation). Each dissatisfied client costs the system a penalty
+of $c_i, i=1,2$ where $c_1 = 1.00, c_2=0.25$. No penalty is paid for
+class 3 dissatisfactions. In your simulation, you will estimate the net
+profit during the interval of time $[0,T)$ using $\mu_1=3,
+\mu_2=1,\mu_3=4$. 
+\begin{enumerate}
+\item Develop the formulas to estimate only the cost of dissatisfaction
+    (total penalty costs) using a {\bfseries conditioning argument for
+    variance reduction}. [{\it Hint: } Given an interval of time
+    $(t_1,t_2]$ the expected number of Poisson arrivals at rate $\bar
+    \mu$ is $\bar \mu (t_2-t_1)$.] 
+\item Implement the resulting formula to run your simulations both in
+    DES and retrospective simulations in order to estimate the total
+    profit.  ({\it You should be able to re-use the code from Problem
+    Set 2}).
+\item Provide confidence intervals and compare the methods (simulation
+    efficiency) with and without the variance reduction method. 
+\item {\bfseries Bonus points:} Discuss how would you implement a
+    similar conditioning argument to evaluate the revenue from the
+    single ride clients of type 3.  
+\end{enumerate}
+
+\end{problem}
+
+\input{q1}
+
+\begin{problem}\marks{50}  Consider a M/GI/1 queue with Poisson arrivals
+    of rate $\la$ and iid service times $\{S_i\}$ with  distribution
+    $\Gamma(3,0.25)$. The goal is to estimate the stationary average
+    queue length $\th$. Consider the Petri-Net model for the simulation.
+    ({\it You should be able to re-use your code from Problem Set 2}). 
+
+\begin{enumerate}
+\item  Let $\alpha=0.05$. Use an adaptive algorithm to stop the
+    simulation so that the approximate confidence interval has precision
+    $\ep = 0.1$. Assume that you do not know the mean and variance of
+    the service distribution (that is, your program could run by reading
+    consecutive service times from a file with historical data, for
+    example). Explain your choice of the algorithm to estimate the
+    confidence interval (independent runs, batch means, discarding of
+    ``warm-up'' period, etc). 
+\item Show that the total number of iterations in your simulation model
+    using the stopping rule that you have defined is a random stopping
+    time with respect to the simulation process. 
+\item Perform 20 independent simulation runs to estimate the coverage
+    probability for $\th$. Discuss your results.
+ %\item Discuss the results of the two different approaches: DES {\it versus} Petri Nets. 
+\item Explain how to apply each of the following methods for variance
+    reduction for the problem above when implementing the Petri net
+    model for simulation:
+\begin{itemize}
+\item Antithetic random variables.
+\item Control variable (what variable do you propose to use for the control?)
+\end{itemize}
+\item Perform the simulations with the added methods using the same
+    stopping criterion and record the CPU times for the 20 replications.
+    Compare your results with and without variance reduction and
+    discuss. 
+\end{enumerate}
+\end{problem}
+
+
+
+
+
+\begin{problem} \marks{10}
+There are $N$ individuals in a population, some of whom have a certain
+viral infection that spreads as follows. Contacts between two members of
+this population occur in accordance with a Poisson process of rate
+$\la$. When a contact occurs, it is equally likely to involve any of the
+$N\choose2$ pairs of individuals. If a contact involves an infected and
+a healthy individual, then with probability $p$ the non-infected one
+becomes infected. Once infected, an individual remains ill for an
+exponential amount of time with intensity $\mu$, after which she/he
+becomes healthy again. We assume no deaths occur, and there is no
+spontaneous infection. Let $X(t)$ denote the number of infected
+individuals at time $t$. 
+Discuss the application of Importance Sampling for variance reduction
+and perform simulations ({\it You should be able to re-use your code
+from Problem Set 3}). 
+\end{problem}
+
+\begin{problem} \marks{25}
+You have decided to do consultation for modeling, simulation and
+optimization. You offer various research  services: modeling,
+statistical analysis, optimization, software development, etc. There are
+$N$ such research stages (or ``tasks'') and they always follow a
+specific order: research of type  $n$ is always followed  by that of
+type $n-1$, for $N\ge n > 1$. The time (in hours) required to complete
+stage $n$ follows a {\bfseries lognormal} distribution $F_n$ of mean
+$\mu_n$. Potential clients arrive according to a Poisson process of rate
+$\la$, and you take the job only if you are free at the time of arrival
+of the client. If you are already working on a problem then you do not
+take new contracts. Each problem starts at stage $n$ with probability
+$p_n$ and ends at stage $1$, following all  intermediate stages. Let
+$X(t)=n$ if at time $t$ you are working on stage $n$ of a problem, and
+use $X(t)=0$ if at time $t$ you are free, waiting for new contracts. You
+will charge $c$ dollars per hour of work. Assume that the probability
+that clients accept your conditions is given by $P_c=(K-c)/K, 0\le c
+<K$. If $c\ge K$ then $P_c=0$ (no client will hire you). For your
+simulation, use $K=2, \la=2$, $N=5$ and $F_n\sim$ LN$(\th_n,\sigma^2)$,
+with $\sigma^2=1$. Use $\mu= (0.3,  0.1, 0.2, 0.3, 0.1)^\top$. 
+
+\begin{enumerate}
+\item  \marks{5} Find the appropriate values of $\th_n$ so that the
+    corresponding mean is $\mu_n$. 
+\item \marks{10} Describe how to use CRN to produce simulations for sets
+    of values $(c_1,\ldots, c_k)$. For this problem, under which
+    conditions on your simulation will the CRN ensure variance reduction
+    of the pairwise comparisons? 
+\item  \marks{10} Implement the simulation for various values of $c$ to
+    estimate the optimal one.  {\it You may re-use the code from Problem
+    Set 3.} 
+\item {\bfseries Bonus points:} Implement the Golden search method for
+    finding the optimal value $c^*$.What precision criterion are you
+    using for each of your pair-wise comparisons? 
+
+\end{enumerate}
+
+\end{problem}
+
+\end{document}

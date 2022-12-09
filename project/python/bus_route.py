@@ -4,6 +4,7 @@ from heapq import heappush, heappop
 from statistics import mean, variance
 
 from numpy.random import poisson, normal, binomial, uniform
+from numpy import arange
 
 # Consider a simple route with a single bus that travels between 6
 # stops.
@@ -19,9 +20,8 @@ from numpy.random import poisson, normal, binomial, uniform
 
 # Will have to think about how we model line termination.
 
-# BUS_SPEED = 25
-# LOADING_TIME = (1/120, 1/480)
-# UNLOADING_TIME = (1/240, 1/960)
+# TO-DO: Add bus pull-over and pull-away time
+# TO-DO: Organization and documentation
 
 
 class Stats:
@@ -87,6 +87,8 @@ class BusRoute:
         self.last = head
         self.name = name
         self.size = 0 if head is None else 1
+        self.schedule = []
+        self.round = None
 
     def append(self, stop):
         if self.last is None:
@@ -94,6 +96,7 @@ class BusRoute:
         else:
             self.last.next = stop
         self.last = stop
+        stop.route = self
         self.size += 1
 
     def calculate_destination_proba(self):
@@ -109,16 +112,13 @@ class BusRoute:
             passengers += node.passenger_rate - node.destination_rate
             # print(node.destination_proba)
             node = node.next
-        # stack = []
-        # node = self.head
-        # while node:
-        #     stack.append(node)
-        #     node = node.next
-        # total_rate = 0
-        # while stack:
-        #     node = stack.pop()
-        #     total_rate += node.destination_rate
-        #     node.destination_proba = node.destination_rate / total_rate
+
+    def add_bus(self, model, time, bus):
+        """Add a new bus to this route, using scheduled times if
+        available."""
+        if self.schedule:
+            time = max(time, self.schedule.pop(0))
+        return BusArrival(model, time, bus, self.head)
 
     def __iter__(self):
         node = self.head
@@ -131,7 +131,7 @@ class BusStop:
     """A bus stop accumulates passengers until a bus arrives to pick
     those passengers up."""
     def __init__(self, model, passenger_rate, destination_rate,
-                 distance_to, traffic_to, name=''):
+                 distance_to, traffic_to, name='', route=None):
         self.model = model
         self.passenger_rate = passenger_rate
         self.destination_rate = destination_rate
@@ -139,6 +139,7 @@ class BusStop:
         self.traffic_to = traffic_to
         self.name = name
         self.next = None
+        self.route = route
         self.destination_proba = None
         self.last_emptied = 0
         self.waiting = 0
@@ -290,7 +291,8 @@ class BusDeparture(Event):
                                 passengers - remaining)
         if self.stop.next:
             return BusArrival(model, self.time, self.bus, self.stop.next)
-        # nothing happens after bus reaches end of the line
+        elif self.stop.route and self.stop.route.round:
+            return self.stop.route.round.add_bus(model, self.time, self.bus)
         return None
     def __str__(self):
         return f'{self.bus.name}: BusDeparture at {self.stop} at time {self.time:.3f}'
@@ -344,11 +346,21 @@ def simulate(duration=300, model=None):
         model = Model()
     event_queue = []
     # route = get_bus_route(model)
-    route = generate_bus_route(model, 24887, 31, 6.7)
-    fleet = [Bus(name=f'Bus{i+1}') for i in range(15)]
+    route = generate_bus_route(model, 12444, 31, 6.7)
+    reverse = generate_bus_route(model, 12444, 31, 6.7)
+    route.round = reverse
+    reverse.round = route
+    fleet = [Bus(name=f'Bus{i+1}') for i in range(6)]
+    reverse_fleet = [Bus(name=f'Bus{i+9}') for i in range(6)]
+    route.schedule = list(arange(0, duration, 60 / len(fleet)))
+    reverse.schedule = list(arange(0, duration, 60 / len(reverse_fleet)))
+    for bus in fleet:
+        heappush(event_queue, route.add_bus(model, 0, bus))
+    for bus in reverse_fleet:
+        heappush(event_queue, reverse.add_bus(model, 0, bus))
     stats = Stats()
-    for i, bus in enumerate(fleet):
-        heappush(event_queue, BusArrival(model, i * 4, bus, route.head))
+    # for i, bus in enumerate(fleet):
+    #     heappush(event_queue, BusArrival(model, i * 4, bus, route.head))
     while event_queue and event_queue[0].time < duration:
         event = heappop(event_queue)
         # print(f'{event}')
@@ -356,38 +368,54 @@ def simulate(duration=300, model=None):
         stats.record(event)
         if next_event is not None:
             heappush(event_queue, next_event)
-        else:
-            heappush(event_queue, BusArrival(model, event.time,
-                                             event.bus, route.head))
+        # else:
+        #     heappush(event_queue, BusArrival(model, event.time,
+        #                                      event.bus, route.head))
     # for stop in route:
     #     print(stop, stop.total_loads, stop.total_unloads)
     # print(stats.report())
     return stats.total_time / stats.total_passengers
 
 def replicate(iterations=20, duration=3000, model=None):
+    """Replicates an simulation and returns an array of results."""
     results = [simulate(duration, model) for _ in range(iterations)]
-    return mean(results), variance(results)
+    return results
+
+def confidence(means):
+    """Returns a mean with width of confidence interval."""
+    theta = mean(means)
+    means = sorted(means, key=lambda x: (x - theta))
+    # last = len(means) * .95
+    # balance = last - int(last)
+    if len(means) == 1:
+        return theta, theta/2
+    error = means[int(len(means) * .975)] - means[int(len(means) * .025)]
+    return theta, error
+
+def resample(means):
+    """Downsamples a list of means by a factor of 2."""
+    new_means = []
+    i = 0
+    while i < len(means):
+        new_means.append((means[i] + means[i+1]) / 2)
+        i += 2
+    return new_means
+
+
+def main(model=None):
+    means = []
+    for i in range(12):
+        results = replicate(40, model=model)
+        if i:
+            for j, (m, r) in enumerate(zip(means, results)):
+                means[j] = (m * i + r) / (i + 1)
+        else:
+            means = results
+        ci = confidence(means)
+        print(f'{i}: {ci[0]:.3f} confidence {ci[1]:.3f}', end='\r')
+    print(confidence(means))
+
 
 if __name__ == '__main__':
-    means = []
-    variances = []
-    perror = 1
-    i = 0
-    while perror > 0.0005:
-        i += 1
-        mu, S = replicate(20)
-        means.append(mu)
-        variances.append(S)
-        perror = (mean(variances)) / (i * 20)
-        print(mean(means), perror)
-    means = []
-    variances = []
-    perror = 1
-    i = 0
-    while perror > 0.0005:
-        i += 1
-        mu, S = replicate(20, model=Model(loading_time=(1/4, 1/8)))
-        means.append(mu)
-        variances.append(S)
-        perror = (mean(variances)) / (i * 20)
-        print(mean(means), perror)
+    main()
+    main(model=Model(loading_time=(1/4, 1/8)))
