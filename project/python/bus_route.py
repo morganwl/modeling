@@ -1,10 +1,15 @@
 """Simulate a bus route."""
 
+from collections import defaultdict
 from heapq import heappush, heappop
-from statistics import mean, variance
+from statistics import mean
 
-from numpy.random import poisson, normal, binomial, uniform
 from numpy import arange
+import numpy as np
+import pandas as pd
+
+from simulation import Model, BusArrival, Bus
+from setup import generate_bus_route
 
 # Consider a simple route with a single bus that travels between 6
 # stops.
@@ -29,314 +34,50 @@ class Stats:
     def __init__(self):
         self.total_passengers = 0
         self.total_time = 0
-        self.arrivals = []
+        self.leaps = 0
+        self.last_bus = {}
+        self.completions = []
+        self.trip_lengths = []
 
     def record(self, event):
         """Record any relevent information about an event that has just
         triggered."""
         if (isinstance(event, BusArrival)
-            and abs(event.stop.destination_proba - 1) >= 0.00001):
+            and event.stop.route.last == event.stop):
             total_time, total_passengers = event.bus.reset_time()
             self.total_time += total_time
             self.total_passengers += total_passengers
-            self.arrivals.append(event.time)
+            if event.stop.route.name == 'B35 E':
+                self.completions.append(event.time)
+                # print(event.bus.name, event.time, event.bus.route_start)
+                # input()
+            self.trip_lengths.append(event.time - event.bus.route_start)
+            last_time = self.last_bus.get(event.stop.route.name, 0)
+            if event.bus.route_start < last_time:
+                self.leaps += 1
+            self.last_bus[event.stop.route.name] = event.bus.route_start
+
+        # if (isinstance(event, BusArrival)
+        #     and event.stop.route.head == event.stop):
+            # print(f'Starting route at {event.time}')
 
     def report(self):
         """Report statistics as a dictionary."""
         wait_times = []
-        for i, time in enumerate(self.arrivals):
+        for i, time in enumerate(self.completions):
             if i == 0:
                 wait_times.append(time)
             else:
-                wait_times.append(time - self.arrivals[i-1])
-        return {'total_time': self.total_time,
-                'total_passengers': self.total_passengers,
-                'mean_travel_time': self.total_time / self.total_passengers,
-                'total_completions': len(self.arrivals),
-                'mean_wait': mean(wait_times)
-                }
-
-
-class Model:
-    """Probability models for various properties of the simulation."""
-    def __init__(self, loading_time=(1/2, 1/5),
-                 unloading_time=(1/4, 1/10),
-                 bus_speed=20 / 60):
-        self.loading_time = loading_time
-        self.unloading_time = unloading_time
-        self.bus_speed = bus_speed
-
-    def get_travel_time(self, distance, traffic_distribution):
-        """Returns the time to cover a given distance given a traffic
-        distribution."""
-        traffic = max(0, normal(*traffic_distribution))
-        # print(f'Traffic: {traffic:.3f}')
-        return distance / self.bus_speed * traffic
-
-    def get_loading_time(self, passengers):
-        """Returns the time for a given number of passengers to load a bus."""
-        return sum(normal(*self.loading_time, passengers))
-
-    def get_unloading_time(self, passengers):
-        return sum(normal(*self.unloading_time, passengers))
-
-class BusRoute:
-    """A linked list of bus stops."""
-    def __init__(self, head=None, name=''):
-        self.head = head
-        self.last = head
-        self.name = name
-        self.size = 0 if head is None else 1
-        self.schedule = []
-        self.round = None
-
-    def append(self, stop):
-        if self.last is None:
-            self.head = stop
-        else:
-            self.last.next = stop
-        self.last = stop
-        stop.route = self
-        self.size += 1
-
-    def calculate_destination_proba(self):
-        """Calculates and assigns the destination probabilities for each
-        bus stop in the route."""
-        node = self.head
-        passengers = 0
-        while node:
-            if passengers == 0:
-                node.destination_proba = 0
-            else:
-                node.destination_proba = min(1, node.destination_rate / passengers)
-            passengers += node.passenger_rate - node.destination_rate
-            # print(node.destination_proba)
-            node = node.next
-
-    def add_bus(self, model, time, bus):
-        """Add a new bus to this route, using scheduled times if
-        available."""
-        if self.schedule:
-            time = max(time, self.schedule.pop(0))
-        return BusArrival(model, time, bus, self.head)
-
-    def __iter__(self):
-        node = self.head
-        while node:
-            yield node
-            node = node.next
-
-
-class BusStop:
-    """A bus stop accumulates passengers until a bus arrives to pick
-    those passengers up."""
-    def __init__(self, model, passenger_rate, destination_rate,
-                 distance_to, traffic_to, name='', route=None):
-        self.model = model
-        self.passenger_rate = passenger_rate
-        self.destination_rate = destination_rate
-        self.distance_to = distance_to
-        self.traffic_to = traffic_to
-        self.name = name
-        self.next = None
-        self.route = route
-        self.destination_proba = None
-        self.last_emptied = 0
-        self.waiting = 0
-        self.total_loads = 0
-        self.total_unloads = 0
-
-    def get_passengers(self, time):
-        """Measures the number of passengers arriving since the stop
-        last emptied to time, and then empties again."""
-        time_delta = max(0, time - self.last_emptied)
-        passengers = poisson(self.passenger_rate * time_delta)
-        wait_time = (self.waiting * time_delta +
-                     sum(uniform(0, time_delta, passengers)))
-        passengers += self.waiting
-        return passengers, wait_time
-
-    def reset(self, time, remaining=0):
-        """Indicate when passengers last loaded from the bus stop and
-        keep track of any passengers who were not able to board."""
-        self.last_emptied = time
-        self.waiting = remaining
-
-    def __str__(self):
-        return str(self.name)
-
-
-class Bus:
-    """A bus follows a route, picking up and dropping off passengers."""
-    def __init__(self, capacity=115, doors=2, name=''):
-        self.capacity = capacity
-        self.doors = doors
-        self.name = name
-        self.passengers = 0
-        self.passenger_time = 0
-        self.passengers_carried = 0
-        self.timestamp = 0
-
-    def board(self, passengers, passenger_wait):
-        """Loads new passengers. Return the number of passengers not
-        able to board."""
-        if self.passengers + passengers > self.capacity:
-            loaded = self.capacity - self.passengers
-            self.passengers = self.capacity
-        else:
-            self.passengers += passengers
-            loaded = passengers
-        self.passengers_carried += loaded
-        # TO-DO: Calculate bus-stop wait times
-        return passengers - loaded
-
-    def unload(self, destination_proba):
-        """Unloads passengers at their destination."""
-        passengers = binomial(self.passengers, destination_proba)
-        self.passengers -= passengers
-        return passengers
-
-    def elapse_time(self, time):
-        """Advances time for all passengers currently on the bus and
-        stores their aggregate travel time."""
-        self.passenger_time += (time - self.timestamp) * self.passengers
-        self.timestamp = time
-
-    def reset_time(self):
-        """Reports and resets the travel statistics."""
-        passenger_time = self.passenger_time
-        passengers_carried = self.passengers_carried
-        self.passenger_time = 0
-        self.passengers_carried = 0
-        return passenger_time, passengers_carried
-
-
-    def __str__(self):
-        return str(self.name)
-
-
-class Event:
-    """An event, initialized with a random arrival time, according to a
-    poisson process and specified rate, and offset from the current
-    time."""
-    rate = 1
-    def __init__(self, time):
-        self.time = time + poisson(self.rate)
-
-    def trigger(self, model, state):
-        """Triggers the event and modifies the current state accordingly."""
-
-    def get_next(self):
-        """Create a new event of the same type, occuring some time in
-        the future based on that event's inter-arrival time
-        distribution."""
-        return type(self)(self.time)
-
-    def __lt__(self, other):
-        return self.time < other.time
-
-
-class BusArrival(Event):
-    """A bus arrives at a stop and begins loading and unloading
-    passengers. Followed by BusDeparture."""
-    # pylint: disable=super-init-not-called
-    def __init__(self, model, time, bus, stop):
-        self.time = time + model.get_travel_time(stop.distance_to,
-                                                 stop.traffic_to)
-        self.bus = bus
-        self.stop = stop
-
-    def trigger(self, model, _state):
-        # print(f'{self.bus} {self.time:.3f}: Arriving at {self.stop}.')
-        self.bus.elapse_time(self.time)
-        unloading = self.bus.unload(self.stop.destination_proba)
-        loading, wait_time = self.stop.get_passengers(self.time)
-        remaining = self.bus.board(loading, wait_time)
-        # put any remaining passengers back
-        self.stop.reset(self.time, remaining)
-        # return a BusDeparture event
-        self.stop.total_unloads += unloading
-        self.stop.total_loads += loading - remaining
-        # print(loading - remaining, unloading)
-        return BusDeparture(model, self.time, self.bus, self.stop,
-                            loading - remaining, unloading)
-
-    def __str__(self):
-        return f'{self.bus.name}: BusArrival at {self.stop} at time {self.time:.3f}'
-
-
-class BusDeparture(Event):
-    """A bus loads any remaining passengers and then leaves for the next
-    stop. Will continue generating BusDeparture events until no
-    passengers remain to load."""
-    # pylint: disable=super-init-not-called
-    def __init__(self, model, time, bus, stop, loading, unloading=0):
-        self.time = time + model.get_unloading_time(unloading) \
-                + model.get_loading_time(loading)
-        self.bus = bus
-        self.stop = stop
-        # if unloading:
-        #     print(f'{self.bus} {self.time:.3f}: Unloading {unloading} passengers.')
-        # print(f'{self.bus} {self.time:.3f}: Loading {loading} passengers.')
-
-    def trigger(self, model, state):
-        self.bus.elapse_time(self.time)
-        passengers, wait_time = self.stop.get_passengers(self.time)
-        # TO-DO: Calculate passenger wait time
-        remaining = self.bus.board(passengers, 0)
-        self.stop.reset(self.time, remaining)
-        self.stop.total_loads += passengers - remaining
-        if passengers - remaining > 0:
-            return BusDeparture(model, self.time, self.bus, self.stop,
-                                passengers - remaining)
-        if self.stop.next:
-            return BusArrival(model, self.time, self.bus, self.stop.next)
-        elif self.stop.route and self.stop.route.round:
-            return self.stop.route.round.add_bus(model, self.time, self.bus)
-        return None
-    def __str__(self):
-        return f'{self.bus.name}: BusDeparture at {self.stop} at time {self.time:.3f}'
-
-
-
-
-def get_bus_route(model):
-    """Initialize a bus route."""
-    # The B35 has 31 stops, covering 6.7 miles, and an average weekday
-    # ridership of 24,887.
-    route = BusRoute()
-    route.append(BusStop(
-        model, int(24887 / 10 / 60 / 31 * 2), 0, 0, (0, 0), '1'))
-    for i in range(31):
-        route.append(BusStop(
-            model, int(24887 / 10 / 60 / 31), int(24887 / 10 / 60 / 31),
-            6.7/31, (1.5, .4), str(i+2)))
-    route.append(BusStop(
-        model, 0, int(24887 / 10 / 60 / 31 * 2), 6.7/31, (1.5, .4), '31'))
-    route.calculate_destination_proba()
-    return route
-
-
-def generate_bus_route(model, passengers, stops, length):
-    passengers -= (stops - 1)
-    passengers = int(passengers)
-    loads = [1] * (stops - 1) + [0]
-    for _i in range(passengers):
-        loads[int((stops - 1) * uniform())] += 1
-    unloads = [0] + [1] * (stops - 1)
-    for i, stop in enumerate(loads):
-        for _i in range(stop - 1):
-            unloads[int((stops - i - 1)*uniform()) + i + 1] += 1
-    route = BusRoute()
-    for i, (load, unload) in enumerate(zip(loads, unloads)):
-        route.append(BusStop(
-            model, load / 12 / 60, unload / 12 / 60, length / (stops - 1),
-            (1.5, .4), str(i + 1)))
-    route.calculate_destination_proba()
-    # print(passengers)
-    # print(loads)
-    # print(unloads)
-    return route
+                wait_times.append(time - self.completions[i-1])
+        return pd.Series(
+                {'total_time': self.total_time,
+                 'total_passengers': self.total_passengers,
+                 'mean_travel_time': self.total_time / self.total_passengers,
+                 'total_completions': len(self.completions),
+                 'trip_lengths': mean(self.trip_lengths),
+                 'leaps': self.leaps,
+                 'mean_wait': mean(wait_times)
+                })
 
 
 def simulate(duration=300, model=None):
@@ -349,11 +90,13 @@ def simulate(duration=300, model=None):
     route = generate_bus_route(model, 12444, 31, 6.7)
     reverse = generate_bus_route(model, 12444, 31, 6.7)
     route.round = reverse
+    route.name = 'B35 E'
     reverse.round = route
-    fleet = [Bus(name=f'Bus{i+1}') for i in range(6)]
-    reverse_fleet = [Bus(name=f'Bus{i+9}') for i in range(6)]
-    route.schedule = list(arange(0, duration, 60 / len(fleet)))
-    reverse.schedule = list(arange(0, duration, 60 / len(reverse_fleet)))
+    reverse.name = 'B35 W'
+    fleet = [Bus(name=f'Bus{i+1}') for i in range(7)]
+    reverse_fleet = [Bus(name=f'Bus{i+25}') for i in range(7)]
+    route.schedule = list(arange(0, duration*2, 15))
+    reverse.schedule = list(arange(0, duration*2, 15))
     for bus in fleet:
         heappush(event_queue, route.add_bus(model, 0, bus))
     for bus in reverse_fleet:
@@ -374,48 +117,48 @@ def simulate(duration=300, model=None):
     # for stop in route:
     #     print(stop, stop.total_loads, stop.total_unloads)
     # print(stats.report())
-    return stats.total_time / stats.total_passengers
+    return stats.report()
+    # return stats.total_time / stats.total_passengers
 
-def replicate(iterations=20, duration=3000, model=None):
+
+def replicate(iterations=20, duration=60*12, model=None):
     """Replicates an simulation and returns an array of results."""
-    results = [simulate(duration, model) for _ in range(iterations)]
+    results = pd.DataFrame([simulate(duration, model) for _ in range(iterations)])
     return results
+
 
 def confidence(means):
     """Returns a mean with width of confidence interval."""
-    theta = mean(means)
-    means = sorted(means, key=lambda x: (x - theta))
-    # last = len(means) * .95
-    # balance = last - int(last)
-    if len(means) == 1:
-        return theta, theta/2
-    error = means[int(len(means) * .975)] - means[int(len(means) * .025)]
-    return theta, error
-
-def resample(means):
-    """Downsamples a list of means by a factor of 2."""
-    new_means = []
-    i = 0
-    while i < len(means):
-        new_means.append((means[i] + means[i+1]) / 2)
-        i += 2
-    return new_means
+    theta = means.mean()
+    confidence = means.transform(np.sort)
+    confidence = confidence.iloc[39] - confidence.iloc[1]
+    # print(confidence)
+    return pd.DataFrame([theta, confidence], index = ['theta', 'confidence'])
+    # theta = mean(means)
+    # means = sorted(means, key=lambda x: (x - theta))
+    # # last = len(means) * .95
+    # # balance = last - int(last)
+    # if len(means) == 1:
+    #     return theta, theta/2
+    # error = means[int(len(means) * .975)] - means[int(len(means) * .025)]
+    # return theta, error
 
 
 def main(model=None):
-    means = []
-    for i in range(12):
+    pd.options.display.float_format = '{:.3f}'.format
+    for i in range(6):
         results = replicate(40, model=model)
         if i:
-            for j, (m, r) in enumerate(zip(means, results)):
-                means[j] = (m * i + r) / (i + 1)
+            means = (means * i + results) / (i + 1)
+            # for j, (m, r) in enumerate(zip(means, results)):
+            #     means[j] = (m * i + r) / (i + 1)
         else:
             means = results
         ci = confidence(means)
-        print(f'{i}: {ci[0]:.3f} confidence {ci[1]:.3f}', end='\r')
+        print(f'{i}: {ci["mean_travel_time"].iloc[0]:.3f} confidence {ci["mean_travel_time"].iloc[1]:.3f}', end='\r')
     print(confidence(means))
 
 
 if __name__ == '__main__':
     main()
-    main(model=Model(loading_time=(1/4, 1/8)))
+    main(model=Model(loading_time=(1/8, 1/20)))
