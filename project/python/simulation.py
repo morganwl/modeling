@@ -194,6 +194,7 @@ class BusArrival(Event):
                                                  stop.traffic_to)
         self.bus = bus
         self.stop = stop
+        self.route_start = self.bus.route_start
 
     def trigger(self, model, _state):
         # print(f'{self.bus} {self.time:.3f}: Arriving at {self.stop}.')
@@ -206,10 +207,11 @@ class BusArrival(Event):
         # return a BusDeparture event
         self.stop.total_unloads += unloading
         self.stop.total_loads += loading - remaining
-        # print(loading - remaining, unloading)
-        return BusDeparture(model, self.time, self.bus, self.stop,
-                            loading - remaining, unloading)
-
+        next_event = BusDeparture(model, self.time, self.bus, self.stop,
+                                  loading - remaining, unloading)
+        while isinstance(next_event, BusDeparture):
+            next_event = next_event.trigger(model, _state)
+        return next_event
     def __str__(self):
         return f'{self.bus.name}: BusArrival at {self.stop} at time {self.time:.3f}'
 

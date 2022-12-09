@@ -8,7 +8,7 @@ from numpy import arange
 import numpy as np
 import pandas as pd
 
-from simulation import Model, BusArrival, Bus
+from simulation import Model, BusArrival, BusDeparture, Bus
 from setup import generate_bus_route
 
 # Consider a simple route with a single bus that travels between 6
@@ -51,11 +51,11 @@ class Stats:
                 self.completions.append(event.time)
                 # print(event.bus.name, event.time, event.bus.route_start)
                 # input()
-            self.trip_lengths.append(event.time - event.bus.route_start)
+            self.trip_lengths.append(event.time - event.route_start)
             last_time = self.last_bus.get(event.stop.route.name, 0)
-            if event.bus.route_start < last_time:
+            if event.route_start < last_time:
                 self.leaps += 1
-            self.last_bus[event.stop.route.name] = event.bus.route_start
+            self.last_bus[event.stop.route.name] = event.route_start
 
         # if (isinstance(event, BusArrival)
         #     and event.stop.route.head == event.stop):
@@ -93,24 +93,79 @@ def simulate(duration=300, model=None):
     route.name = 'B35 E'
     reverse.round = route
     reverse.name = 'B35 W'
-    fleet = [Bus(name=f'Bus{i+1}') for i in range(7)]
-    reverse_fleet = [Bus(name=f'Bus{i+25}') for i in range(7)]
+    fleet = [Bus(name=f'Bus{i+1}') for i in range(12)]
+    reverse_fleet = [Bus(name=f'Bus{i+25}') for i in range(12)]
     route.schedule = list(arange(0, duration*2, 15))
     reverse.schedule = list(arange(0, duration*2, 15))
+    buses = []
     for bus in fleet:
-        heappush(event_queue, route.add_bus(model, 0, bus))
+        buses.append(route.add_bus(model, 0, bus))
     for bus in reverse_fleet:
-        heappush(event_queue, reverse.add_bus(model, 0, bus))
+        buses.append(reverse.add_bus(model, 0, bus))
     stats = Stats()
-    # for i, bus in enumerate(fleet):
-    #     heappush(event_queue, BusArrival(model, i * 4, bus, route.head))
-    while event_queue and event_queue[0].time < duration:
-        event = heappop(event_queue)
-        # print(f'{event}')
+
+    done = False
+    i = 0
+    time = 0
+    stop = None
+    seen = set()
+    while buses[i].bus.route_start < duration:
+        if buses[i] is None:
+            continue
+        event = buses[i]
+        if time > event.time and stop == event.stop:
+            print('WARNING: Processing events out of order.')
+            print(event.bus.name, time)
+            print('\n'.join([f'{e}' for e in buses]))
+            input()
+        time = event.time
+        stop = event.stop
+        if event.bus.name in seen:
+            print('WARNING')
+            input()
+        seen.add(event.bus.name)
+
         next_event = event.trigger(model, None)
         stats.record(event)
-        if next_event is not None:
-            heappush(event_queue, next_event)
+        while isinstance(next_event, BusDeparture):
+            next_event = next_event.trigger(model, _state)
+            stats.record(next_event)
+        buses[i] = next_event
+        h = i
+        j = i - 1 if i > 0 else len(buses) - 1
+        while (next_event.stop == buses[j].stop
+               and next_event.time < buses[j].time):
+            buses[h] = buses[j]
+            buses[j] = next_event
+            h = j
+            j = j - 1 if j > 0 else len(buses) - 1
+        h = i
+        j = i + 1 if i < len(buses) - 1 else 0
+        while (next_event.stop == buses[j].stop
+               and next_event.time > buses[j].time):
+            buses[h] = buses[j]
+            buses[j] = next_event
+            h = j
+            j = j + 1 if j < len(buses) - 1 else 0
+        # buses[i] = event.trigger(model, None)
+        if isinstance(next_event, BusArrival):
+            if i == len(buses) - 1:
+                i = 0
+                seen = set()
+            else:
+                i += 1
+        # print(time)
+
+
+    # for i, bus in enumerate(fleet):
+    #     heappush(event_queue, BusArrival(model, i * 4, bus, route.head))
+    # while event_queue and event_queue[0].time < duration:
+    #     event = heappop(event_queue)
+    #     # print(f'{event}')
+    #     next_event = event.trigger(model, None)
+    #     stats.record(event)
+    #     if next_event is not None:
+    #         heappush(event_queue, next_event)
         # else:
         #     heappush(event_queue, BusArrival(model, event.time,
         #                                      event.bus, route.head))
