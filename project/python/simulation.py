@@ -209,8 +209,6 @@ class BusArrival(Event):
         self.stop.total_loads += loading - remaining
         next_event = BusDeparture(model, self.time, self.bus, self.stop,
                                   loading - remaining, unloading)
-        while isinstance(next_event, BusDeparture):
-            next_event = next_event.trigger(model, _state)
         return next_event
     def __str__(self):
         return f'{self.bus.name}: BusArrival at {self.stop} at time {self.time:.3f}'

@@ -128,7 +128,7 @@ def simulate(duration=300, model=None):
         next_event = event.trigger(model, None)
         stats.record(event)
         while isinstance(next_event, BusDeparture):
-            next_event = next_event.trigger(model, _state)
+            next_event = next_event.trigger(model, None)
             stats.record(next_event)
         buses[i] = next_event
         h = i
